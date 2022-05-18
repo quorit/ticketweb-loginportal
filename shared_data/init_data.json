@@ -1,0 +1,348 @@
+
+{
+    "faculties": {
+        "FAS": {
+            "QA": "Arts (QA)",
+            "QB": "ConEd/Arts (QB)",
+            "QD": "Computing (QD)",
+            "QF": "ConEd/Science (QF)",
+            "QK": "Kinesiology (QK)",
+            "QL": "Life Sciences (QL)",
+            "QM": "Music (QM)",
+            "QMM": "ConEd/Music (QMM)",
+            "QS": "Science (QS)",
+            "QT": "Fine Art (QT)",
+            "QTT": "ConEd/Fine Art (QTT)"
+
+        },
+        "FHS": {
+            "QH": "Health Sciences (QH)",
+            "QN": "Nursing (QN)"
+        },
+        "BISC": {
+            "QIH": "BISC Health Sci (QIH)",
+            "QIA": "BISC Arts (QIA)",
+            "QIS": "BISC Science (QIS)",
+            "QIB": "BISC ConEd/Arts (QIB)",
+            "QIF": "BISC ConEd/Science (QIF)"
+        },
+        "FEAS":{
+            "QE": "Engineering (QE)",
+            "QEC": "Engineering, Elec & Comp (QEC)",
+            "QEM": "Mechatronic and Robotics (QEM)"
+
+        },
+        "QBRD":{
+            "QXA": "Arts (QXA)",
+            "QXD": "Computing (QXD)",
+            "QXE": "Engineering (QXE)",
+            "QXS": "Science (QXS)"
+        },
+        "BMT": {
+            "QMT": "Music (QMT)"
+        },
+        "SSB": {
+            "QC": "Commerce (QC)"
+        }
+    },
+    "faculties_student": {
+        "FAS": {
+            "longhand": "Faculty of Arts and Science",
+            "progs": {
+                "arts": {
+                    "longhand": "Arts",
+                    "extension": false
+                },
+                "computing": {
+                    "longhand": "Computing",
+                    "extension": false
+                },
+                "fine_art":{
+                    "longhand": "Fine Art",
+                    "extension": false
+                },
+                "music": {
+                    "longhand": "Music",
+                    "extension": false
+                },
+                "science": {
+                    "longhand": "Science",
+                    "extension": false
+                },
+                "certs":{
+                    "longhand": "Certificates",
+                    "extension": {
+                        "heading": "Certificate Selection",
+                        "extension_type": "some_all"
+                    }
+                }
+            }
+        },
+        "EDU": {
+            "longhand": "Faculty of Education",
+            "progs": {
+                "consecututive_ed": {
+                    "longhand": "Consecutive Education",
+                    "extension": false
+                },
+                "continuing_ed": {
+                    "longhand": "Continuing Education",
+                    "extension": false
+                },
+                "esl":
+                {
+                    "longhand": "English as a Second Language",
+                    "extension": false
+                }
+            }
+        },
+        "FHS": {
+            "longhand": "Faculty of Health Sciences",
+            "progs": {
+                "degree": {
+                    "longhand": "Health Sciences Degree",
+                    "extension": false
+                }, 
+                "non_degree": {
+                    "longhand": "Health Sciences Non-Degree",
+                    "extension": false
+                }, 
+                "medicine": {
+                    "longhand": "Medicine",
+                    "extension": false
+                },
+                "nursing": {
+                    "longhand": "Nursing",
+                    "extension": false
+                }
+
+            }
+        },
+        "LAW":{
+            "longhand": "Faculty of Law",
+            "progs": {
+                "jd": {
+                    "longhand": "Juris Doctor",
+                    "extension": false
+                },
+                "ml": {
+                    "longhand": "Master of Laws",
+                    "extension": false
+                },
+                "cert":{
+                    "longhand": "Certificate in Law",
+                    "extension": false
+                }
+            }
+        },
+        "FEAS":{
+            "longhand": "Faculty of Engineering & Applied Science",
+            "progs": {
+                "degree": {
+                    "longhand": "Engineering Degree",
+                    "extension": false
+                },
+                "non_degree": {
+                    "longhand": "Engineering Non-Degree",
+                    "extension": false
+                },
+                "certs": {
+                    "longhand": "Certificates",
+                    "extension": {
+                        "heading": "Certificate Selection",
+                        "extension_type": "some_all"
+                    }
+                }
+            }
+        },
+        "SSB": {
+            "longhand": "Smith School of Business",
+            "progs": {
+                "commerce": {
+                    "longhand": "Commerce",
+                    "extension": false
+                },
+                "mba": {
+                    "longhand": "Master of Business Administration",
+                    "extension": false
+                },
+                "cert": {
+                    "longhand": "Certificate in Business",
+                    "extension": false
+                },
+                "other":{
+                    "longhand": "Other Programs",
+                    "extension": {
+                        "heading": "Other Program Selection",
+                        "extension_type": "some"
+                    }
+                }
+            }
+        },
+        "SGS": {
+            "longhand": "School of Graduate Studies",
+            "progs": {
+                "phd": {
+                    "longhand": "PHD",
+                    "extension": {
+                        "heading": "PHD Concentrations",
+                        "extension_type": "some_all"
+                    }
+                },
+                "masters": {
+                    "longhand": "Masters",
+                    "extension": {
+                        "heading": "Masters Concentrations",
+                        "extension_type": "some_all"
+                    }
+                },
+                "non_degree": {
+                    "longhand": "Non-Degree",
+                    "extension": false
+                }
+            }
+        }
+    },
+    "data_lists": {
+        "app_statuses": {
+            "heading": "Application statuses",
+            "items": {
+                "application": "Application",
+                "offered": "Offered",
+                "accepted": "Accepted"
+            }
+        },
+        "acad_loads_adm": {
+            "heading": "Academic loads",
+            "items": {
+                "full_time": "Full-time",
+                "part_time": "Part-time"
+            }
+        },
+        "acad_loads_student": {
+            "heading": "Academic load",
+            "items": {
+                "full_time": "Full-time",
+                "part_time": "Part-time",
+                "no_load": "No Load"
+            }
+        },
+        "careers_adm": {
+            "heading": "Careers",
+            "items": {
+                "ugrd": "Undergraduate",
+                "dist": "Undergraduate Online",
+                "grad_law_x": "Graduate (Law Exchange only)"
+            }
+        },
+        "careers_student": {
+            "heading": "Career",
+            "items": {
+                "ugrd": "Undergraduate (UGRD)",
+                "grad": "Graduate (GRAD)",
+                "dist": "Undergraduate Online (DIST)",
+                "nonc": "Non Credit (NONC)"
+            }
+        },
+        "term_statuses": {
+            "heading": "Student term status at selected terms",
+            "items": {
+                "active_nwd": "Active and not term withdrawn",
+                "active": "Active (including term withdrawn)"
+            }
+        },
+        "prog_statuses": {
+            "heading": "Program status",
+            "items": {
+                "active": "Active",
+                "completed": "Completed",
+                "withdrawn": "Withdrawn"
+            }
+        },
+        "admit_types": {
+            "heading": "Admit types",
+            "items": {
+                "first_year": "First year",
+                "upper_year": "Upper year"
+            }
+        },
+        "student_statuses": {
+            "heading": "Student status",
+            "items": {
+                "active": "Active",
+                "completed": "Completed",
+                "cancelled": "Cancelled",
+                "discontinued": "Discontinued",
+                "l_o_a": "Leave of Absence"
+            }
+        },
+        "campuses": {
+            "heading": "Campus",
+            "items": {
+                "bisc": "U.K. (BISC)",
+                "main": "Main (MAIN)"
+            }
+        }
+
+    },
+    "list_menus": {
+        "admissions": [
+            "careers_adm",
+            "admit_types",
+            "acad_loads_adm",
+            "app_statuses"
+        ],
+        "student":[
+            "careers_student",
+            "term_statuses",
+            "acad_loads_student",
+            "student_statuses",
+            "campuses"
+        ]
+    },
+    "field_defs":{
+        "id": "ID",
+        "name_last": "Last Name",
+        "name_first": "Preferred First Name (when available)",
+        "applicant_email": "Applicant Email",
+        "campus_email": "Campus Email",
+        "program": "Program",
+        "plan": "Plan",
+        "campus": "Campus",
+        "level": "Level",
+        "load": "Load",
+        "term": "Term",
+        "status": "Status"
+    },
+    "standard_fields": {
+        "admissions": [
+            "id",
+            "name_last",
+            "name_first",
+            "applicant_email"
+        ],
+        "student": [
+            "id",
+            "name_last",
+            "name_first",
+            "campus_email",
+            "program",
+            "plan",
+            "campus",
+            "level",
+            "load",
+            "term",
+            "status"
+        ]
+    },
+    "data_support_choices": {
+        "class_list": "Student Class List via Power BI",
+        "dashboard": "Undergraduate Admissions Dashboard"
+    },
+    "request_types": {
+        "admissions": "Admissions data",
+        "student": "Student data",
+        "rptsupport": "Data support"
+    }
+    
+}
