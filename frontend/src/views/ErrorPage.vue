@@ -22,7 +22,9 @@
 
 <script>
 
-import { SessionAuthenticationError,HTTPResponseError,NetworkError } from "../js_extra/network.js";
+import { HTTPResponseError } from "../js_extra/web_project_error.js"
+import { SessionAuthenticationError,NetworkError } from "../js_extra/network.js";
+
 import ErrorDiv from '../components/ErrorDiv.vue'
 
 

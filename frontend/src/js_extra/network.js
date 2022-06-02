@@ -1,4 +1,4 @@
-import {WebProjectError} from "../js_extra/web_project_error.js"
+import {WebProjectError,HTTPResponseError} from "../js_extra/web_project_error.js"
 
 
 class SessionAuthenticationError extends WebProjectError{
@@ -9,14 +9,7 @@ class SessionAuthenticationError extends WebProjectError{
 }
 
 
-class HTTPResponseError extends WebProjectError {
-   //this error is for any http response error that is not failed session authentication
-   constructor(status_code,message){
-      super(message);
-      this.status_code = status_code;
-      this.name="HTTPResponseError"
-   }
-}
+
 
 class NetworkError extends WebProjectError {
    //this is for when a fetch fails and we don't even get a response
@@ -179,7 +172,6 @@ function delete_session(){
 
 
 export {submit_json, fetch_init_data, get_app_token, login_session, init_data_url,
-        SessionAuthenticationError,
-        HTTPResponseError,NetworkError,get_user_data,delete_session,
+        SessionAuthenticationError, NetworkError,get_user_data,delete_session,
       
       }

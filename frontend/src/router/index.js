@@ -5,31 +5,11 @@ import ReportingForm from '../views/Reporting.vue'
 import RptSupport from '../views/RptSupport.vue'
 import ErrorPage from '../views/ErrorPage.vue'
 import LoginForm from '../views/Login.vue'
+import {SessionAuthenticationError, get_app_token} from '../js_extra/network.js'
+import {get_error_params} from '../js_extra/web_project_error.js'
 import store from '../store'
-import {SessionAuthenticationError, get_app_token, HTTPResponseError} from '../js_extra/network.js'
-import {WebProjectError} from '../js_extra/web_project_error.js'
-
 
 Vue.use(VueRouter)
-
-
-//function sessionCookieExists() {
-//    var cookieArr = document.cookie.split(";");
-//    var cookieName;
-//    var cookiePair;
-//    console.log(document.cookie);
-//    console.log(cookieArr);
-//    for(var i = 0; i < cookieArr.length; i++) {
-//        cookiePair = cookieArr[i].split("=");
-//        cookieName = cookiePair[0].trim();
-//        if (cookieName == "reporting"){
-//            return true;
-//        }
-//    }
-//    return false;
-// }
-
-
 
 
 
@@ -89,21 +69,6 @@ const router = new VueRouter({
 
 
 
-function get_error_params(e){
-    var return_val={};
-    if (e instanceof WebProjectError){
-        return_val.error_type = e.name;
-        if (e instanceof HTTPResponseError){
-            return_val.status_code=e.status_code.toString();
-        }
-    }else{
-        return_val.error_type = "Uncategorized";
-    }
-    return return_val;
-}
-
-
-router.get_error_params=get_error_params;
 
 router.beforeEach(async (to,from,next) => {
     function next_login(){
@@ -127,25 +92,28 @@ router.beforeEach(async (to,from,next) => {
 
 
     if((to.name == 'reporting_request_forms' || to.name == 'reporting_support_form')){
-        if(!store.state.init_data){
-            var x;
-            try { 
-                x=await store.dispatch('set_init_data');
-                console.log(x);
-            } catch(e) {
-                next({
-                    name: "error_page",
-                    params: get_error_params(e)
-                });
-                return;            
-            }
-        }
-      
 
-        var app_token;
+
         try{
-            app_token = await get_app_token();
+            await get_app_token().then(app_token => store.dispatch('set_user_data',app_token));
+            //Note that I am re-fetching the user data every time we go to a new page (other than login or error).
+            //This is because in another window the user could log out and log in as someone else.
+            //and if this app were any more involved, there would be links going from one route to another
+            //*within* the app (the app does not reload when you navigate *within the app* links).
+            //If that were to happen the user data would remain unchanged even if the user logged in as someone else.
+            
+            //If not for this problem we could load the user data in App.vue when the app (re)loads or
+            //on login, if the user wasn't logged in when the app reloads.
+            //The app reloads whenever the user navigates to a page in the website or when the
+            //user manually changes the url in the url bar.
+            //However that's not good enough because in a vue app a route change does not always imply an
+            //app reload, and the user *can* change without an app reload, because a log our and login can occur
+            //in a different tab/windows and the session cookies do not pertain to specific
+            //browser window or tab.
 
+            //In the case of *this* particular app, there are no in-app links, so it's impossible
+            //to go to from one page to another without reloading the app, but we are not assuming
+            //that the app will always be limited in this way.
         } catch (e) {
             if (e instanceof SessionAuthenticationError){
                 //this should cover...missing session cookie, expired session
@@ -165,19 +133,6 @@ router.beforeEach(async (to,from,next) => {
                 return;
             }
 
-        }
-        if (!store.state.user_data){
-            try{
-                await store.dispatch('set_user_data',app_token);
-            } catch (e) {
-                //note that a 401 here does not mean we go to the login page.
-                //since we are using a jwt token that we just got and it should work.
-                next( {                    
-                    name: "error_page",
-                    params: get_error_params(e)
-                });
-                return;
-            }
         }
     }
     next();

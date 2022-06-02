@@ -46,7 +46,7 @@
 <script>
 
 import {delete_session} from './js_extra/network.js';
-
+import {get_error_params} from './js_extra/web_project_error.js'
 
 export default {
   name: 'App',
@@ -72,13 +72,24 @@ export default {
       } catch (e) {
           this.$router.push( {                    
                     name: "error_page",
-                    params: this.$router.get_error_params(e)
+                    params: get_error_params(e)
                 });
           return;
       }
+      
       this.$router.go() //reloads page which should cause cause a re-route to the login page because the session cookie go mauled
     }
 
+  },
+  mounted: async function(){
+    try { 
+      await this.$store.dispatch('set_init_data');
+    } catch(e) {
+      this.$router.push({
+          name: "error_page",
+          params: get_error_params(e)
+      });            
+    }
   }
 };
 </script>

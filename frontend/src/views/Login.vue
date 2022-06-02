@@ -120,9 +120,6 @@ export default {
             await login_session(this.net_id,this.password);
          } catch (e) {
             this.login_error = e;
-            console.log(e);
-            console.log("HIHO");
-            console.log(e.name)
             this.processing_request=false;
             this.login_fail=true;
             return;

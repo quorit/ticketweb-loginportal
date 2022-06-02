@@ -27,7 +27,6 @@ export default new Vuex.Store({
       );
     },
     set_user_data(context,app_token){
-      console.log(app_token);
       return get_user_data(app_token).then(
         response_json => new Promise ((resolve) => {
           context.commit('set_user_data',response_json);

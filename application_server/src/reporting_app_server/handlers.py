@@ -275,7 +275,7 @@ else:
 
 
 def _get_rt_api_token():
-    secret_file = os.path.join(etc_path,"web-project/applications/reporting/rt-api-token")
+    secret_file = os.path.join(etc_path,"ticketweb/applications/reporting/rt-api-token")
     f = open(secret_file,"r")
     secret_data = f.read().strip()
     f.close()
@@ -286,7 +286,7 @@ _rt_api_token = _get_rt_api_token()
 
 def _get_config_data_all():
     print(etc_path)
-    ldap_file = os.path.join(etc_path,"web-project/applications/reporting/config.json")
+    ldap_file = os.path.join(etc_path,"ticketweb/applications/reporting/config.json")
 
     f = open(ldap_file,"r")
     ldap_data = json.load(f)
@@ -375,16 +375,22 @@ class SubmitTicket():
         rt_path= rt_path_base + "REST/2.0/"
         print (rt_path + "user/" + mail_enc)
         receive = requests.get(rt_path + "user/" + mail_enc,headers=headers)
-        print (receive.status_code)
+        
+        current_user_name = None
+
         if receive.status_code == 200:
             current_user_name = mail_enc
         elif receive.status_code == 404:
-            current_user_name = user_data["sAMAccountName"]
+            receive = requests.get(rt_path + "user/" + user_data["sAMAccountName"],headers=headers)
+            if receive.status_code == 200:
+                current_user_name = user_data["sAMAccountName"]
+            elif receive.status_code != 404:
+                raise Exception("Failed RT communication")
         else:
             raise Exception("Failed RT communication")
             # this will result in a 500 error for the user
             # which is appropriate if this happens
-
+        
         user_fields = {
             "RealName": user_data["displayName"],
             "Name": user_data["sAMAccountName"],
@@ -396,12 +402,23 @@ class SubmitTicket():
             "content-type": "application/json"
         }
 
-        url = rt_path+"user/"+current_user_name
-        receive = requests.put(url,
-                                headers=headers,
-                                json=user_fields)
-        if receive.status_code not in [200,201] :
+        if not current_user_name:
+            receive = requests.post(rt_path + "user",headers=headers,json=user_fields)
+        else:
+            url = rt_path+"user/"+current_user_name
+            receive = requests.put(url,
+                                   headers=headers,
+                                   json=user_fields)
+        
+
+
+        if receive.status_code not in [200,201]:
+            print (receive.status_code)
             raise Exception("Failed RT commmunication")
+
+
+        
+        
 
         internal_req_content = {
             "Requestor": mail,
