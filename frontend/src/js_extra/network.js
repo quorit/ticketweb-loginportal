@@ -24,7 +24,7 @@ class NetworkError extends WebProjectError {
 
 
 
-const init_data_url = window.location.origin + process.env.VUE_APP_PUBLIC_PATH_ROOT + "reporting_static/init_data.json";
+const init_data_url = window.location.origin + process.env.VUE_APP_SHARED_DATA_PATH + "init_data.json";
 
 
 
@@ -76,7 +76,7 @@ function fetch_init_data(){
 
 
 
-const token_server_url = window.location.origin + process.env.VUE_APP_PUBLIC_PATH_ROOT + "tokenserver/session/reporting"
+const token_server_url = window.location.origin + process.env.VUE_APP_AUTHSYSTEM_PATH + "session/reporting"
 
 
 function get_app_token(){
@@ -114,7 +114,7 @@ function login_session(user_id, password){
 }
 
 
-const api_root = window.location.origin + process.env.VUE_APP_PUBLIC_PATH_ROOT + "reporting_api/";
+const api_root = window.location.origin + process.env.VUE_APP_APP_SERVER_PATH;
 
 
 

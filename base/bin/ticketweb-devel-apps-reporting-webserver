@@ -1,0 +1,13 @@
+#!/bin/bash
+
+
+ticketweb_devel_root=$1
+webserver_port=$(cat $ticketweb_devel_root/devel-config.json | jq .webserver_port | tr -d '"')
+
+
+source $ticketweb_devel_root/python_venv/bin/activate
+
+
+cd $ticketweb_devel_root/applications/reporting/frontend
+npm run serve -- --port $webserver_port
+

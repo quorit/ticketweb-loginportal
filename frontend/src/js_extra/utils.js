@@ -1,5 +1,5 @@
 const base_year = "1901";
-const base_strm = "1101";
+const base_strm = "1011";
 
 function term_lookup(strm){
    const last_digit = strm.slice(-1);

@@ -1,0 +1,12 @@
+#!/bin/bash
+
+
+ticketweb_devel_root=$1
+shared_data_server_port=$(cat $ticketweb_devel_root/devel-config.json | jq .shared_data_server_port | tr -d '"')
+
+
+source $ticketweb_devel_root/python_venv/bin/activate
+
+cd $ticketweb_devel_root/applications/reporting/shared_data 
+python -m RangeHTTPServer $shared_data_server_port
+

@@ -5,26 +5,26 @@ module.exports = {
   transpileDependencies: [
     'vuetify'
   ],
-  publicPath: process.env.VUE_APP_PUBLIC_PATH_ROOT + 'reporting/',
+  publicPath: process.env.VUE_APP_PUBLIC_PATH,
 
   devServer: (process.env.NODE_ENV=='development')?{
     proxy: {
-         '^/reporting_static': {
-            target: process.env.VUE_APP_LOCAL_STATIC_SERVER,
+         '^/application/shared_data': {
+            target: process.env.VUE_APP_SHARED_DATA_SERVER_URL,
             pathRewrite: {
-               '^/reporting_static': '/'
+               '^/application/shared_data': '/'
             }
          },
-         '^/tokenserver': {
-              target: process.env.VUE_APP_TOKEN_SERVER,
+         '^/authsystem_server': {
+              target: process.env.VUE_APP_AUTHSYSTEM_SERVER_URL,
               pathRewrite: {
-                '^/tokenserver': '/'
+                '^/authsystem_server': '/'
               }
          },
-         '^/reporting_api': {
-            target: process.env.VUE_APP_APP_SERVER,
+         '^/application/server': {
+            target: process.env.VUE_APP_APP_SERVER_URL,
             pathRewrite: {
-               '^/reporting_api': '/'
+               '^/application/server': '/'
             }
          }
 
