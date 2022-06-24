@@ -15,7 +15,6 @@ usage()
 
 
 PARSED_ARGUMENTS=$(getopt --name ticketweb-apps-reporting-server -o d --long devel-mode -- "$@")
-echo "PARSED_ARGUMENTS IS $PARSED_ARGUMENTS"
 
 VALID_ARGUMENTS=$?
 if [ "$VALID_ARGUMENTS" != "0" ]; then
@@ -47,7 +46,7 @@ fi
 if [[ "$devel_mode" -eq 0 ]]; then
     venv_id=$1
     venv_roots_file=/etc/ticketweb_venv_roots.json
-    ticketweb_venv_root=$(cat "$venv_roots_file" | jq ."$venv_id" | tr -d '"')
+    ticketweb_venv_root=$(cat "$venv_roots_file" | jq ."$venv_id" |  sed -e 's/^"//' -e 's/"$//' )
 else
     ticketweb_venv_root=$1
 fi

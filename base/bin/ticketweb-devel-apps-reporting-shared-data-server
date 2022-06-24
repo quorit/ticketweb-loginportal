@@ -1,12 +1,17 @@
 #!/bin/bash
 
 
-ticketweb_devel_root=$1
-shared_data_server_port=$(cat $ticketweb_devel_root/devel-config.json | jq .shared_data_server_port | tr -d '"')
+ticketweb_venv_root=$1
+shared_data_server_port=$(cat $ticketweb_venv_root/etc/ticketweb/applications/reporting/config.json \
+	                      | jq .devel_settings.shared_data_server_port \
+			      | sed -e 's/^"//' -e 's/"$//')
 
 
-source $ticketweb_devel_root/python_venv/bin/activate
+source $ticketweb_venv_root/bin/activate
 
-cd $ticketweb_devel_root/applications/reporting/shared_data 
+
+
+
+cd $ticketweb_venv_root/usr/share/ticketweb/applications/reporting
 python -m RangeHTTPServer $shared_data_server_port
 

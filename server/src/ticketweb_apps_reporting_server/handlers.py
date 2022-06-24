@@ -274,15 +274,7 @@ else:
     etc_path = "/etc"
 
 
-def _get_rt_api_token():
-    secret_file = os.path.join(etc_path,"ticketweb/applications/reporting/rt-api-token")
-    f = open(secret_file,"r")
-    secret_data = f.read().strip()
-    f.close()
-    return secret_data
 
-
-_rt_api_token = _get_rt_api_token()
 
 def _get_config_data_all():
     print(etc_path)
@@ -297,25 +289,30 @@ def _get_config_data_all():
 _config_data = _get_config_data_all()
 
 
+def _get_rt_api_token():
+    api_token_exec = _config_data["rt"]["api_token_exec"]
+    api_token = os.popen(api_token_exec).read()
+    return api_token
+
+
+_rt_api_token = _get_rt_api_token()
 
 
 
 
-def _get_service_account_pw():
+def _get_pw():
+    password_exec = _config_data["ldap"]["password_exec"]
+    pw = os.popen(password_exec).read()
+    return pw
 
-    secret_file = os.path.join(etc_path,"service_creds.json")
-    f = open(secret_file,"r")
-    secret_data = json.load(f)
-    f.close()
-    return secret_data[_config_data["ldap_data"]["service_account"]]
 
-_service_account_pw = _get_service_account_pw()
+_service_account_pw = _get_pw()
 
 
 
 
 def _get_ldap_handle():
-        ldap_data = _config_data["ldap_data"]
+        ldap_data = _config_data["ldap"]
         url = ldap_data["url"]
         ldap_handle  = ldap.initialize(url)
         service_account_dn = ldap_data["dn"]

@@ -8,11 +8,12 @@ module.exports = {
   publicPath: process.env.VUE_APP_PUBLIC_PATH,
 
   devServer: (process.env.NODE_ENV=='development')?{
+    port: process.env.VUE_APP_PORT,
     proxy: {
-         '^/application/shared_data': {
+         '^/apps/reporting/shared_data': {
             target: process.env.VUE_APP_SHARED_DATA_SERVER_URL,
             pathRewrite: {
-               '^/application/shared_data': '/'
+               '^/apps/reporting/shared_data': '/'
             }
          },
          '^/authsystem_server': {
@@ -21,10 +22,10 @@ module.exports = {
                 '^/authsystem_server': '/'
               }
          },
-         '^/application/server': {
+         '^/apps/reporting/server': {
             target: process.env.VUE_APP_APP_SERVER_URL,
             pathRewrite: {
-               '^/application/server': '/'
+               '^/apps/reporting/server': '/'
             }
          }
 
