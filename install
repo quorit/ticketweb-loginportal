@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# default values
+devel_mode=0
+
+
+usage()
+{
+  echo "Usage 1: install --devel-mode"
+  echo "Usage 2: install"
+  exit 2
+}
+
+
+PARSED_ARGUMENTS=$(getopt --name install -o d --long devel-mode -- "$@")
+
+VALID_ARGUMENTS=$?
+if [ "$VALID_ARGUMENTS" != "0" ]; then
+  usage
+fi
+
+
+eval set -- "$PARSED_ARGUMENTS"
+while :
+do
+  case "$1" in
+    --devel-mode)   devel_mode=1      ; shift   ;;
+    # -- means the end of the arguments; drop this, and break out of the while loop
+    --) shift; break ;;
+    # If invalid options were passed, then getopt should have reported an error,
+    # which we checked as VALID_ARGUMENTS when getopt was called...
+    *) echo "Unexpected option: $1 - this should not happen."
+       usage ;;
+  esac
+done
+
+if (( $devel_mode == 1 && $# != 0 || $devel_mode == 0 && $# != 0 )); then
+    usage
+fi
+
+script_dir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )"
+echo #script_dir
+
+if [[ "$devel_mode" -eq 0 ]]; then
+    cp "$script_dir"/base/bin/* /usr/local/bin
+    cp "$script_dir"/base/systemd-unit-files/* /etc/systemd/system
+else
+    mkdir --parent "$HOME"/.local/bin
+    ln --symbolic --force "$script_dir"/base/bin/* "$HOME"/.local/bin
+    cd "$script_dir"/frontend
+    npm install
+fi
+
