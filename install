@@ -44,16 +44,16 @@ echo #script_dir
 if [[ "$devel_mode" -eq 0 ]]; then
     cp "$script_dir"/base/bin/* /usr/local/bin
     cp "$script_dir"/base/systemd-unit-files/* /etc/systemd/system
-    mkdir --parents /usr/share/ticketweb/applications/reporting
+    mkdir --parents /usr/local/share/ticketweb/applications/reporting
     cd "$script_dir"/frontend
-    tar cvzf /usr/share/ticketweb/applications/reporting/frontend.tar.gz * .env*
+    tar cvzf /usr/local/share/ticketweb/applications/reporting/frontend.tar.gz * .env*
     cd "$script_dir"/shared_data
-    tar cvzf /usr/share/ticketweb/applications/reporting/shared_data.tar.gz *
+    tar cvzf /usr/local/share/ticketweb/applications/reporting/shared_data.tar.gz *
     
 
 
 else
-    mkdir --parent "$HOME"/.local/bin
+    mkdir --parents "$HOME"/.local/bin
     ln --symbolic --force "$script_dir"/base/bin/* "$HOME"/.local/bin
     cd "$script_dir"/frontend
     npm install

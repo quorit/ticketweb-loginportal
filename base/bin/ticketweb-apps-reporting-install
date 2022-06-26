@@ -70,7 +70,7 @@ script_dir=$(dirname -- "$0")
 if [[ "$devel_mode" -eq 0 ]]; then
     frontend_src_dir=$(mktemp -d)
     cd $frontend_scr_dir
-    tar xzvf /usr/share/ticketweb/applications/reporting/frontend.tar.gz
+    tar xzvf /usr/local/share/ticketweb/applications/reporting/frontend.tar.gz
 fi    
 
 #We might really want to switch to a branch matching the venv_id, like "preview" or "final".
@@ -87,14 +87,14 @@ else
 fi
 
 
-shared_data_target_dir=$ticketweb_venv_root/usr/share/ticketweb/applications/reporting
+shared_data_target_dir=$ticketweb_venv_root/usr/local/share/ticketweb/applications/reporting
 
 
 mkdir --parents $shared_data_target_dir
 
 if [[ "$devel_mode" -eq 0 ]]; then
     cd $shared_data_target_dir
-    tar xzvf /usr/share/ticketweb/applications/reporting/shared_data.tar.gz
+    tar xzvf /usr/local/share/ticketweb/applications/reporting/shared_data.tar.gz
 else
     shared_data_src_dir="$git_repo_dir"/shared_data
     ln -s "$shared_data_src_dir"/* "$shared_data_target_dir"
