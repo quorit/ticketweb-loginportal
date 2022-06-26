@@ -88,14 +88,15 @@ fi
 
 
 shared_data_target_dir=$ticketweb_venv_root/usr/share/ticketweb/applications/reporting
-shared_data_src_dir="$git_repo_dir"/shared_data
 
 
 mkdir --parents $shared_data_target_dir
 
 if [[ "$devel_mode" -eq 0 ]]; then
-    cp -r "$shared_data_src_dir"/* "$shared_data_target_dir" 
+    cd $shared_data_target_dir
+    tar xzvf /usr/share/ticketweb/applications/reporting/shared_data.tar.gz
 else
+    shared_data_src_dir="$git_repo_dir"/shared_data
     ln -s "$shared_data_src_dir"/* "$shared_data_target_dir"
 fi
 
