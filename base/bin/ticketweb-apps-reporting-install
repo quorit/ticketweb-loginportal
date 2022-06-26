@@ -46,6 +46,10 @@ fi
 if [[ "$devel_mode" -eq 0 ]]; then
    new_user_id=ticketweb_"$venv_id"_apps_reporting
    useradd --system --no-create-home $new_user_id
+   mkdir --parents --mode=770 /var/log/ticketweb/"$venv_id"/applications/reporting 
+   chown $new_user_id:$new_user_id /var/log/ticketweb/"$venv_id"/applications/reporting
+
+
 fi
 
 
@@ -64,10 +68,9 @@ script_dir=$(dirname -- "$0")
 
 
 if [[ "$devel_mode" -eq 0 ]]; then
-    tmp_dir=$(mktemp -d)
-    cd $tmp_dir
-    git clone https://github.com/quorit/ticketweb-apps-reporting.git
-    git_repo_dir=$tmp_dir/ticketweb-apps-reporting
+    frontend_src_dir=$(mktemp -d)
+    cd $frontend_scr_dir
+    tar xzvf /usr/share/ticketweb/applications/reporting/frontend.tar.gz
 fi    
 
 #We might really want to switch to a branch matching the venv_id, like "preview" or "final".
@@ -75,8 +78,8 @@ fi
 source $ticketweb_venv_root/bin/activate
 
 if [[ "$devel_mode" -eq 0 ]]; then
-    cd "$git_repo_dir"/server
-    pip install --force-reinstall .
+    pip install --force-reinstall "git+https://github.com/quorit/ticketweb-apps-reporting.git#subdirectory=server"
+
 else
     git_repo_dir="$2"
     cd "$git_repo_dir"/server
@@ -88,7 +91,7 @@ shared_data_target_dir=$ticketweb_venv_root/usr/share/ticketweb/applications/rep
 shared_data_src_dir="$git_repo_dir"/shared_data
 
 
-mkdir --parent $shared_data_target_dir
+mkdir --parents $shared_data_target_dir
 
 if [[ "$devel_mode" -eq 0 ]]; then
     cp -r "$shared_data_src_dir"/* "$shared_data_target_dir" 
@@ -97,13 +100,13 @@ else
 fi
 
 if [[ "$devel_mode" -eq 0 ]]; then
-   cd "$git_repo_dir"/frontend
+   cd "$frontend_src_dir"
    npm install
    VUE_APP_TICKETWEB_PATH=$3
    export VUE_APP_TICKETWEB_PATH
    npm run build
    frontend_dir="$ticketweb_venv_root"/srv/ticketweb/applications/reporting/frontend
-   mkdir --parent "$frontend_dir"
+   mkdir --parents "$frontend_dir"
    cp -r dist/* "$frontend_dir"
 fi
 

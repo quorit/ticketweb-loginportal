@@ -44,6 +44,9 @@ echo #script_dir
 if [[ "$devel_mode" -eq 0 ]]; then
     cp "$script_dir"/base/bin/* /usr/local/bin
     cp "$script_dir"/base/systemd-unit-files/* /etc/systemd/system
+    mkdir --parents /usr/share/ticketweb/applications/reporting
+    tar cvzf /usr/share/ticketweb/applications/reporting/frontend.tar.gz "$script_dir"/* "$script_dir"/.*
+
 else
     mkdir --parent "$HOME"/.local/bin
     ln --symbolic --force "$script_dir"/base/bin/* "$HOME"/.local/bin
