@@ -12,8 +12,8 @@ Type = simple
 # (I wouldn't know)
 
 # the specific user that our service will run as
-User=ticketweb_%i_apps_reporting
-Group=ticketweb_%i_apps_reporting
+User=ticketweb_apps_reporting
+Group=ticketweb_apps_reporting
 
 
 
@@ -35,7 +35,7 @@ RuntimeDirectory=ticketweb/%i/applications/reporting
 
 
 
-ExecStart=/usr/local/bin/ticketweb-apps-reporting-server %i
+ExecStart=/usr/local/bin/ticketweb-apps-reporting-server %f
 
 
 

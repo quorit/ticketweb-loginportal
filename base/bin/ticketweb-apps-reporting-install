@@ -9,7 +9,7 @@ ticketweb_venv_root=unset
 usage()
 {
   echo "Usage 1: ticketweb-apps-reporting-install --devel-mode <venv_root> <git_dir>"
-  echo "Usage 2: ticketweb-apps-reporting-install <venv_id> <web_root>"
+  echo "Usage 2: ticketweb-apps-reporting-install <venv_root> <web_root>"
   exit 2
 }
 
@@ -41,25 +41,13 @@ if (( "$devel_mode" == 1 && $# != 2 || "$devel_mode" == 0 && $# != 2 )); then
     usage
 fi
 
+ticketweb_venv_root=$1
 
+venv_id=$(systemd-escape --path "$ticketweb_venv_root")
 
 if [[ "$devel_mode" -eq 0 ]]; then
-   new_user_id=ticketweb_"$venv_id"_apps_reporting
-   useradd --system --no-create-home $new_user_id
    mkdir --parents --mode=770 /var/log/ticketweb/"$venv_id"/applications/reporting 
-   chown $new_user_id:$new_user_id /var/log/ticketweb/"$venv_id"/applications/reporting
-
-
-fi
-
-
-if [[ "$devel_mode" -eq 0 ]]; then
-    venv_id=$1
-    venv_roots_file=/etc/ticketweb_venv_roots.json
-    ticketweb_venv_root=$(cat "$venv_roots_file" | jq ."$venv_id" | sed -e 's/^"//' -e 's/"$//' )
-else
-    ticketweb_venv_root=$1
-
+   chown ticketweb_apps_reporting:ticketweb_apps_reporting /var/log/ticketweb/"$venv_id"/applications/reporting
 fi
 
 
@@ -69,9 +57,12 @@ script_dir=$(dirname -- "$0")
 
 if [[ "$devel_mode" -eq 0 ]]; then
     frontend_src_dir=$(mktemp -d)
-    cd $frontend_scr_dir
+    cd $frontend_src_dir
     tar xzvf /usr/local/share/ticketweb/applications/reporting/frontend.tar.gz
 fi    
+
+mkdir --parents "ticketweb_venv_root"/etc/ticketweb/applications/reporting
+
 
 #We might really want to switch to a branch matching the venv_id, like "preview" or "final".
 

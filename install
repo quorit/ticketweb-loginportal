@@ -42,6 +42,7 @@ script_dir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && 
 echo #script_dir
 
 if [[ "$devel_mode" -eq 0 ]]; then
+    useradd --system --no-create-home ticketweb_apps_reporting
     cp "$script_dir"/base/bin/* /usr/local/bin
     cp "$script_dir"/base/systemd-unit-files/* /etc/systemd/system
     mkdir --parents /usr/local/share/ticketweb/applications/reporting
