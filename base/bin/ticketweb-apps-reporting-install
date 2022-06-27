@@ -9,7 +9,8 @@ ticketweb_venv_root=unset
 usage()
 {
   echo "Usage 1: ticketweb-apps-reporting-install --devel-mode <venv_root> <git_dir>"
-  echo "Usage 2: ticketweb-apps-reporting-install <venv_root> <web_root>"
+  echo "Usage 2: ticketweb-apps-reporting-install <venv_root> <web_root> <build_mode>"
+  echo "<build_mode> can be either of 'preview' or 'final'."
   exit 2
 }
 
@@ -37,7 +38,7 @@ do
 done
 
 
-if (( "$devel_mode" == 1 && $# != 2 || "$devel_mode" == 0 && $# != 2 )); then
+if (( "$devel_mode" == 1 && $# != 2 || "$devel_mode" == 0 && $# != 3 )); then
     usage
 fi
 
@@ -96,7 +97,8 @@ if [[ "$devel_mode" -eq 0 ]]; then
    npm install
    VUE_APP_TICKETWEB_PATH=$2
    export VUE_APP_TICKETWEB_PATH
-   npm run build
+   build_mode="$3"
+   npm run build -- --mode "$build_mode"
    frontend_dir="$ticketweb_venv_root"/srv/ticketweb/applications/reporting/frontend
    mkdir --parents "$frontend_dir"
    cp -r dist/* "$frontend_dir"
