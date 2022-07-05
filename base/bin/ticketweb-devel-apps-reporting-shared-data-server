@@ -12,6 +12,6 @@ source $ticketweb_venv_root/bin/activate
 
 
 
-cd $ticketweb_venv_root/usr/share/ticketweb/applications/reporting
+cd $ticketweb_venv_root/usr/local/share/ticketweb/applications/reporting/shared-data
 python -m RangeHTTPServer $shared_data_server_port
 

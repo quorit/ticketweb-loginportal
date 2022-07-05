@@ -55,14 +55,42 @@ fi
 script_dir=$(dirname -- "$0")
 
 
+usrshared=/usr/local/share/ticketweb/applications/reporting
+venv_usrshared="$ticketweb_venv_root"$usrshared
+
+
+venv_varlib="$ticketweb_venv_root"/var/lib/ticketweb/applications/reporting
+
+
+mkdir --parents "$venv_usrshared"
+
+
+mkdir --parents "$venv_varlib"
+
+
+rm -rf "$venv_usrshared"/*
+
+rm -rf "$venv_varlib"/*
+
+
+
+
 
 if [[ "$devel_mode" -eq 0 ]]; then
-    frontend_src_dir=$(mktemp -d)
-    cd $frontend_src_dir
-    tar xzvf /usr/local/share/ticketweb/applications/reporting/frontend.tar.gz
-fi    
+    frontend_src_dir="$venv_varlibe"/frontend
+    mkdir "$frontend_src_dir"
+    tar xzvf $usrshared/frontend.tar.gz -C "$frontend_src_dir"
+    shared_data_target_dir="$venv_usrshared"/shared-data
+    mkdir "$shared_data_target_dir"    
+    tar xzvf $usrshared/shared_data.tar.gz -C "$shared_data_target_dir"
+else
+    git_repo_dir="$2"
+    ln -s "$git_repo_dir"/frontend "$venv_varlib"
+    ln -s "$git_repo_dir"/shared-data "$venv_usrshared"
+fi   
 
-mkdir --parents "ticketweb_venv_root"/etc/ticketweb/applications/reporting
+
+mkdir --parents "$ticketweb_venv_root"/etc/ticketweb/applications/reporting
 
 
 #We might really want to switch to a branch matching the venv_id, like "preview" or "final".
@@ -73,35 +101,18 @@ if [[ "$devel_mode" -eq 0 ]]; then
     pip install --force-reinstall "git+https://github.com/quorit/ticketweb-apps-reporting.git#subdirectory=server"
 
 else
-    git_repo_dir="$2"
     cd "$git_repo_dir"/server
     pip install --editable .
 fi
 
 
-shared_data_target_dir=$ticketweb_venv_root/usr/local/share/ticketweb/applications/reporting
 
+mkdir --parents "$ticketweb_venv_root"/srv/ticketweb/applications/reporting/frontend
 
-mkdir --parents $shared_data_target_dir
-
-if [[ "$devel_mode" -eq 0 ]]; then
-    cd $shared_data_target_dir
-    tar xzvf /usr/local/share/ticketweb/applications/reporting/shared_data.tar.gz
-else
-    shared_data_src_dir="$git_repo_dir"/shared_data
-    ln -s "$shared_data_src_dir"/* "$shared_data_target_dir"
-fi
 
 if [[ "$devel_mode" -eq 0 ]]; then
    cd "$frontend_src_dir"
    npm install
-   VUE_APP_TICKETWEB_PATH=$2
-   export VUE_APP_TICKETWEB_PATH
-   build_mode="$3"
-   npm run build -- --mode "$build_mode"
-   frontend_dir="$ticketweb_venv_root"/srv/ticketweb/applications/reporting/frontend
-   mkdir --parents "$frontend_dir"
-   cp -r dist/* "$frontend_dir"
 fi
 
 if [[ "$devel_mode" -eq 1 ]]; then
