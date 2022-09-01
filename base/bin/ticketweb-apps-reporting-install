@@ -9,8 +9,7 @@ ticketweb_venv_root=unset
 usage()
 {
   echo "Usage 1: ticketweb-apps-reporting-install --devel-mode <venv_root> <git_dir>"
-  echo "Usage 2: ticketweb-apps-reporting-install <venv_root> <web_root> <build_mode>"
-  echo "<build_mode> can be either of 'preview' or 'final'."
+  echo "Usage 2: ticketweb-apps-reporting-install <venv_root>"
   exit 2
 }
 
@@ -38,7 +37,7 @@ do
 done
 
 
-if (( "$devel_mode" == 1 && $# != 2 || "$devel_mode" == 0 && $# != 3 )); then
+if (( "$devel_mode" == 1 && $# != 2 || "$devel_mode" == 0 && $# != 1 )); then
     usage
 fi
 
@@ -77,7 +76,7 @@ rm -rf "$venv_varlib"/*
 
 
 if [[ "$devel_mode" -eq 0 ]]; then
-    frontend_src_dir="$venv_varlibe"/frontend
+    frontend_src_dir="$venv_varlib"/frontend
     mkdir "$frontend_src_dir"
     tar xzvf $usrshared/frontend.tar.gz -C "$frontend_src_dir"
     shared_data_target_dir="$venv_usrshared"/shared-data
