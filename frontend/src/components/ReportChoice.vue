@@ -87,7 +87,7 @@ export default {
                     }
                 } else {
                     ideal_value = {
-                        rtp_source_type: "other",
+                        rpt_source_type: "other",
                         description: this.other_source
                     }
                 }

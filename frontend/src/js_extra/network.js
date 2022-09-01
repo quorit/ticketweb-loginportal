@@ -134,7 +134,7 @@ function get_user_data(app_token){
 
 
 
-function submit_json(submission_data,form_type,app_token){
+function submit_data(submission_data,form_type,app_token){
 
    const api_url = api_root + "submit-ticket/" + form_type;
    console.log(api_url);
@@ -143,11 +143,10 @@ function submit_json(submission_data,form_type,app_token){
        {   
           method: "POST",
           headers: new Headers({
-            "Authorization": "Bearer " + app_token,
-            "content-type": "application/json"
+            "Authorization": "Bearer " + app_token
           }),
           mode: "cors",
-          body: JSON.stringify(submission_data)
+          body: submission_data
        }
     )
     .then(test_ok)
@@ -171,7 +170,7 @@ function delete_session(){
 
 
 
-export {submit_json, fetch_init_data, get_app_token, login_session, init_data_url,
+export {submit_data, fetch_init_data, get_app_token, login_session, init_data_url,
         SessionAuthenticationError, NetworkError,get_user_data,delete_session,
       
       }

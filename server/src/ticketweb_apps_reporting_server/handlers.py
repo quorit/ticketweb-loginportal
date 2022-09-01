@@ -8,10 +8,10 @@ import ldap
 import sys
 import requests
 import urllib
-
-
-
-
+import html
+import tempfile
+from requests_toolbelt.multipart.encoder import MultipartEncoder
+from contextlib import ExitStack
 
 
 
@@ -182,7 +182,6 @@ class BadRequestUserNotFound(BadRequest):
     def __init__(self, user_id):
         message = "Failed to find user '{0}' in LDAP db.".format(user_id)
         status = falcon.HTTP_BAD_REQUEST
-        # really means unauthenticated in HTTP-speak.
         super().__init__(message,status)
 
 class BadRequestNoContentReceived(BadRequest):
@@ -191,6 +190,26 @@ class BadRequestNoContentReceived(BadRequest):
         status = falcon.HTTP_BAD_REQUEST
         # really means unauthenticated in HTTP-speak.
         super().__init__(message,status)
+
+class BadRequestMultipleContentParts(BadRequest):
+    def __init__(self):
+        message = "Multiple parts with the 'json' name have been sent."
+        status = falcon.HTTP_BAD_REQUEST
+        super().__init__(message,status)
+
+
+class BadRequestContentNotJson(BadRequest):
+    def __init__(self):
+        message = "Part with the 'json' name cannot have mime type other than 'application/json'."
+        status = falcon.HTTP_BAD_REQUEST
+        super().__init__(message,status)
+
+class BadRequestContentNotMultipart(BadRequest):
+    def __init__(self):
+        message = "The request cannot have a type other than 'multipart/form-data'."
+        status = falcon.HTTP_BAD_REQUEST
+        super().__init__(message,status)
+
 
 
 
@@ -350,16 +369,79 @@ class UserData ():
         resp.status = falcon.HTTP_OK
 
 
+# def get_req_content(req):
+#    if req.content_length == 0:
+#        raise BadRequestNoContentReceived()
+#    req_content = json.load(req.stream)
+#    return req_content
+#    #need more tests. is content too large? does it actually parse
+
+
 
 class SubmitTicket():
-    def __init__(self,report_type):
+    def __init__(self,report_type,get_subject,get_ticket_content):
         self.report_type=report_type
+        self.get_subject=get_subject
+        self.get_ticket_content=get_ticket_content
+    
+
+    
 
 
 
 
 
-    def on_post(self,resp,user_data,subject,due_date,ticket_content):
+
+    def on_post(self,req,resp):
+        def get_req_content(req,tempdir):
+            # Might want to test that content isn't too big here
+            if not req.content_type.startswith(falcon.MEDIA_MULTIPART):
+                raise BadRequestContentNotMultipart()
+            parts = req.get_media()
+            attachments = []
+            json_part = None
+            attach_count = 0
+            for part in parts:
+                if part.name == 'json':
+                    if json_part:
+                        raise BadRequestMultipleContentParts()
+                    if part.content_type != falcon.MEDIA_JSON:
+                        raise BadRequestContentNotJson()
+                    # if part.content_length == 0:
+                    #    raise BadRequestNoContentReceived()
+                    # testing for content_lenght probably won't work because
+                    # we probably won't have content length headers in the parts
+                    # In fact it's not a good test because it might not actually
+                    # be the same as the real content length.
+                    json_part = json.load(part.stream)
+                elif part.name == 'attachment':
+                    tmp_filename = os.path.join(tempdir,str(attach_count))
+                    tmp_file_s = open(tmp_filename, 'wb')
+                    try:
+                        part.stream.pipe(tmp_file_s)
+                    finally:
+                        tmp_file_s.close()
+                    attachments.append({
+                        "filename": part.filename,
+                        "content_type": part.content_type
+                    })
+                    attach_count = attach_count + 1
+            return {
+                "json": json_part,
+                "attachments": attachments
+            }
+
+        def get_due_date_rt(due_date):
+            return time.strftime("%Y-%m-%d %H:%M:%S" ,
+                                    time.gmtime(time.mktime(time.strptime(due_date + " 23:59:59",
+                                    "%Y-%m-%d %H:%M:%S"))))
+    # need to throw bad requestrs if the due date is unparseable.
+
+        user_data = _get_user_data(["displayName","mail","sAMAccountName"],req)
+        #For other form types this comes out of the request
+        
+
+
         rt_path_base = _config_data["rt"]["path_base"]
         auth_string = "Token " + _rt_api_token
 
@@ -396,7 +478,7 @@ class SubmitTicket():
         
         headers = {
             "Authorization": auth_string,
-            "content-type": "application/json"
+            "Content-Type": "application/json"
         }
 
         if not current_user_name:
@@ -414,26 +496,84 @@ class SubmitTicket():
             raise Exception("Failed RT commmunication")
 
 
-        
-        
+        with tempfile.TemporaryDirectory() as temp_dir:
+            req_content = get_req_content(req,temp_dir)
+            json_part = req_content["json"]
+            due_date_rt = get_due_date_rt(json_part["due_date"])
+            real_name = user_data["displayName"]
+            ticket_content = self.get_ticket_content(real_name,json_part)
+            attachments = req_content["attachments"]
+            subject = self.get_subject(json_part)
 
-        internal_req_content = {
-            "Requestor": mail,
-            "Subject": subject,
-            "Queue": _config_data["rt"]["queue"],
-            "CustomFields": {
-                "RequestType": self.report_type
-            },
-            "Content": ticket_content,
-            "ContentType": "text/html"
+            internal_req_content = {
+                "Requestor": mail,
+                "Subject": subject,
+                "Queue": _config_data["rt"]["queue"],
+                "CustomFields": {
+                    "RequestType": self.report_type
+                },
+                "Content": ticket_content,
+                "ContentType": "text/html",
+                "Due": due_date_rt
 
-        }
-        if due_date:
-            internal_req_content["Due"] = due_date
+            }
 
-        receive = requests.post(rt_path + "ticket",
-                                headers=headers,
-                                json=internal_req_content)
+            print(internal_req_content)
+
+            mp_fields = [ 
+                            ('JSON', (None, json.dumps(internal_req_content)))
+                        ]
+
+
+
+            with ExitStack() as stack:
+                # See https://stackoverflow.com/questions/4617034/how-can-i-open-multiple-files-using-with-open-in-python
+                # for why exitstack is being used
+                # Note that if you do
+                #
+                # with open(file) as f:
+                #   blah
+                #
+                # f will always be closed no matter what,
+                # it's the same as doing:
+                #
+                # f = open(file)
+                # try:
+                #    do blah
+                # finally:
+                #    f.close()
+                #
+                # Either of these work for just one file,
+                # but what if i have an abitrary length list?
+                # this is where ExitStack comes in.
+                # If something should go wrong in the below code,
+                # all of the streams added to the exit stack will be guaranteed closed.
+
+
+                for attach_count in range(len(attachments)):
+                    srcfile = os.path.join(temp_dir,str(attach_count))
+                    stream = open(srcfile,'rb')
+                    stack.enter_context(stream)
+                    attachment = attachments[attach_count]
+                    filename = attachment["filename"]
+                    content_type = attachment["content_type"]
+                    mp_fields.append(('Attachments',(filename,stream,content_type)))
+            
+
+
+                mp_encoder = MultipartEncoder(
+                    fields = mp_fields
+                )
+
+                headers = {
+                    "Authorization": auth_string,
+                    "Content-Type": mp_encoder.content_type,
+                }
+
+
+                receive = requests.post(rt_path + "ticket",
+                                        headers=headers,
+                                        data=mp_encoder)
 
 
         if receive.status_code != 201:
@@ -442,21 +582,9 @@ class SubmitTicket():
         resp.content_type = falcon.MEDIA_JSON
         resp.status = falcon.HTTP_OK
 
-def get_req_content(req):
-    if req.content_length == 0:
-        raise BadRequestNoContentReceived()
-    req_content = json.load(req.stream)
-    return req_content
-    #need more tests. is content too large? does it actually parse
 
 
-def _get_due_date(req_content):
-    if "due_date" not in req_content:
-        return None
-    return time.strftime("%Y-%m-%d %H:%M:%S" ,
-                         time.gmtime(time.mktime(time.strptime(req_content["due_date"] + " 23:59:59",
-                                     "%Y-%m-%d %H:%M:%S"))))
-    # need to throw bad requestrs if the due date is unparseable.
+
 
 
 def _get_subject(req_content):
@@ -465,72 +593,233 @@ def _get_subject(req_content):
 
 
 
-def _get_ticket_content_rptsupport(req_content):
-    return req_content["content_data"]
-    #content_data should really be json data and this function should turn it into html
 
 
-def _get_ticket_content_admissions(req_content):
-    return req_content["content_data"]
-    #content_data should really be json data and this function should turn it into html
-
-def _get_ticket_content_student(req_content):
-    return req_content["content_data"]
-    #content_data should really be json data and this function should turn it into html
 
 
-def _get_user_data_submit_ticket(req):
-    return _get_user_data(["displayName","mail","sAMAccountName"],req)
+def _build_dtdd(title, data):
+    return "<dt>" + title + ":</dt><dd>" + html.escape(data) + "</dd>"
+
+if sys.base_prefix != sys.prefix:
+    _data_path = sys.prefix + "/usr/local/share/ticketweb/applications/reporting/shared-data"
+else:
+    _data_path = "/usr/local/share/ticketweb/applications/reporting/shared-data"
+
+def _get_shared_data():
+    file = os.path.join(_data_path,"init_data.json")
+    f = open(file,"r")
+    shared_data = json.load(f)
+    f.close()
+    return shared_data
+
+_shared_data = _get_shared_data()
+
+
+def _build_requested_before(prev_report_info):
+    if not prev_report_info:
+        result = _build_dtdd("Requested Before","No")
+    else:
+        result = _build_dtdd("Requested Before","Yes") + \
+                  _build_dtdd("Previous Report Info",prev_report_info)
+    return result
+
+
+
+
+
+
+def _build_terms(heading,terms):
+    def term_lookup(term):
+        last_digit = term[-1]
+        base_year= 1901
+        base_strm= 1011
+        season_lookup = {
+            "1": "Winter",
+            "5": "Summer",
+            "9": "Fall"
+        }
+        season = season_lookup[last_digit]
+        term_int = int(term)
+        (year_delta,remainder) = divmod(term_int-base_strm,10)
+        year_int = base_year + year_delta
+        return str(year_int) + " " + season
+
+    result = "<dt>" + heading + ":</dt>" \
+             + "<dd><ul style='padding-left:0;'>" \
+             + "".join(["<li>" + term_lookup(term) + " (" + term + ")</li>" for term in terms]) \
+             + "</ul></dd>"
+
+    return result
+
+
+def _build_list_choices(list_choices):
+    def build_list_choice(item):
+        choices = list_choices[item]
+        list_def = _shared_data["data_lists"][item]
+        header = list_def["heading"]
+        result = "<dt>" + header + ":</dt>" \
+                 + "<dd><ul style='padding-left:0;'>" \
+                 + "".join(["<li>" + list_def["items"][choice] + "</li>" for choice in choices]) \
+                 + "</ul></dd>"
+        return result
+
+    result  = "".join([build_list_choice(item) for item in list_choices])
+    return result
+
+def _build_requested_fields(requested_fields):
+    result = "<dt>Requested Fields:</dt><dd><ul style='padding-left:0;'>" \
+             + "".join(["<li>" + field + "</li>" for field in requested_fields]) \
+             + "</ul></dd>"
+    return result
+
 
 
 class SubmitTicketRptSupport(SubmitTicket):
     def __init__(self):
-        super().__init__("rptsupport")
+        def get_subject(req_content):
+            return "Data support request"
 
-    def on_post(self,req,resp):
-        user_data = _get_user_data_submit_ticket(req)
-        subject = "Data support request"
-        #For other form types this comes out of the request
-        req_content = get_req_content(req)
-        due_date = _get_due_date(req_content)
-        ticket_content = _get_ticket_content_rptsupport(req_content)
-        super().on_post(resp,user_data,subject,due_date,ticket_content)
+        def get_ticket_content(real_name,req_content):
+            source_choice = req_content["source_choice"]
+            if source_choice["rpt_source_type"] == "standard":
+                report_txt = _shared_data["data_support_choices"][source_choice["source_key"]]
+            else:
+                report_txt = source_choice["description"]
+            result = "<dl>" \
+                      + _build_dtdd("Request Type","Data support") \
+                      + _build_dtdd("Requestor Name",real_name)  \
+                      + (_build_dtdd("Requestor Department", req_content["requestor_dept"]) if "requestor_dept" in req_content else "") \
+                      + _build_dtdd("Due Date",req_content['due_date']) \
+                      + (_build_dtdd("Requestor Position",req_content["requestor_position"]) \
+                               if "requestor_position" in req_content else "") \
+                      + _build_dtdd("Report Source",report_txt) \
+                      + _build_dtdd("Problem Description",req_content["support_request_descr"]) \
+                      + "</dl>"
+            return result
 
-class SubmitTicketRptSupport(SubmitTicket):
-    def __init__(self):
-        super().__init__("rptsupport")
+        super().__init__("rptsupport",get_subject,get_ticket_content)
 
-    def on_post(self,req,resp):
-        user_data = _get_user_data_submit_ticket(req)
-        subject = "Data support request"
-        #For other form types this comes out of the request
-        req_content = get_req_content(req)
-        due_date = _get_due_date(req_content)
-        ticket_content = _get_ticket_content_rptsupport(req_content)
-        super().on_post(resp,user_data,subject,due_date,ticket_content)
+
 
 class SubmitTicketStudent(SubmitTicket):
     def __init__(self):
-        super().__init__("student")
+        def get_subject(req_content):
+            return req_content["subject"]
 
-    def on_post(self,req,resp):
-        user_data = _get_user_data_submit_ticket(req)
-        #For other form types this comes out of the request
-        req_content = get_req_content(req)
-        subject = _get_subject(req_content)
-        due_date = _get_due_date(req_content)
-        ticket_content = _get_ticket_content_student(req_content)
-        super().on_post(resp,user_data,subject,due_date,ticket_content)
+        def get_ticket_content(real_name,req_content):
+            def build_progs(progs_selected):
+                def build_common_progs(common_progs):
+                    def build_common_faculty(common_progs,faculty):
+                        def build_prog(progs,prog):
+                            def build_subprogs(subprogs):
+                                if subprogs is True:
+                                    result = ": <i>All</i>"
+                                elif isinstance(subprogs,list) and len(subprogs) > 0:
+                                    result = ":<ul>" \
+                                    + "".join(["<li>" + html.escape(subprogs[i]) + "</li>" for i in range(len(subprogs))]) \
+                                    + "</ul>"
+                                else:
+                                    result = ""
+                                return result              
+                            subprogs = progs[prog]
+                            result = _shared_data["faculties_student"][faculty]["progs"][prog]["longhand"] \
+                                     + build_subprogs(subprogs)
+                            return result
+                        progs = common_progs[faculty]
+                        result = faculty + ":<ul>" \
+                                 +  "".join([ "<li>" + build_prog(progs,prog) + "</li>" for prog in progs]) \
+                                 + "</ul>"
+                        return result
+                    # here
+                    result = "Commonly requested programs:<ul>" \
+                           + "".join(["<li>" + build_common_faculty(common_progs,faculty) + "</li>" for faculty in common_progs]) \
+                           + "</ul>"
+                    return result
+                def build_other_plans_progs(other_plansprogs):
+                    result = "Other programs and plans:<ul>" \
+                            + "".join(["<li>" + html.escape(progplan) + "</li>" for progplan in other_plansprogs]) \
+                            + "</ul>"
+                    return result
+                result = "<dt>Programs and Plans:</dt><dd><ul style='padding-left:0;'>" \
+                         + ("<li>" + build_common_progs(progs_selected["common_progs"]) + "</li>" if "common_progs" in progs_selected \
+                                                                               else "") \
+                         + ("<li>" + build_other_plans_progs(progs_selected["other_plans_progs"]) + "</li>" if \
+                               "other_plans_progs" in progs_selected else "") \
+                         + "</ul></dd>"
+                return result
+            result = "<dl>" \
+                     + _build_dtdd("Request Type","Student data") \
+                     + _build_dtdd("Subject",req_content["subject"]) \
+                     + _build_dtdd("Requestor Name",real_name) \
+                     + (_build_dtdd("Requestor Department", req_content["requestor_dept"]) if "requestor_dept" in req_content \
+                            else "") \
+                     + _build_dtdd("Due Date",req_content['due_date']) \
+                     + (_build_dtdd("Requestor Position",req_content["requestor_position"]) if "requestor_position" in req_content \
+                             else "") \
+                     + _build_requested_before(req_content.get("prev_report_info")) \
+                     + _build_dtdd("Report Purpose",req_content["report_purpose"]) \
+                     + (_build_terms("Terms",req_content["terms"]) if "terms" in req_content else "") \
+                     + (build_progs(req_content["progs"]) if "progs" in req_content else "") \
+                     + (_build_list_choices(req_content["list_choices"]) if "list_choices" in req_content else "") \
+                     + (_build_dtdd("Extra Details",req_content["extra_details"]) \
+                         if "extra_details" in req_content else "") \
+                     + _build_requested_fields(req_content["requested_fields"]) \
+                     + "</dl>"
+            return result
+        super().__init__("student",get_subject,get_ticket_content)
+
+
+
 
 class SubmitTicketAdmissions(SubmitTicket):
     def __init__(self):
-        super().__init__("admissions")
+        def get_subject(req_content):
+            return req_content["subject"]
 
-    def on_post(self,req,resp):
-        user_data = _get_user_data_submit_ticket(req)
-        #For other form types this comes out of the request
-        req_content = get_req_content(req)
-        subject = _get_subject(req_content)
-        due_date = _get_due_date(req_content)
-        ticket_content = _get_ticket_content_admissions(req_content)
-        super().on_post(resp,user_data,subject,due_date,ticket_content)
+        def get_ticket_content(real_name,req_content):
+            def build_progs(progs_selected):
+                def build_first_year(progplans):
+                    def build_faculty(faculty):
+                        progs = progplans[faculty]
+                        result = faculty + ":<ul>" \
+                                  + "".join(["<li>" + _shared_data["faculties"][faculty][prog] + "</li>" for prog in progs]) \
+                                  + "</ul>"
+                        return result
+                    result = "First year:<ul>" \
+                             + "".join(["<li>" + build_faculty(faculty) + "</li>" for faculty in progplans]) \
+                             + "</ul>"
+                    return result
+                def build_upper_year(progplans):
+                    result = "Upper year:<ul>" \
+                             + "".join(["<li>" + progplan + "</li>" for progplan in progplans]) \
+                             + "</ul>"
+                    return result
+                result = "<dt>Programs:</dt><dd><ul style='padding-left:0;'>" \
+                         + ("<li>" + build_first_year(progs_selected["first_year"]) + "</li>" \
+                               if "first_year" in progs_selected else "") \
+                         + ("<li>" + build_upper_year(progs_selected["upper_year"]) + "</li>" \
+                               if "upper_year" in progs_selected else "") \
+                         + "</ul></dd>" 
+                return result    
+            result = "<dl>" \
+                     + _build_dtdd("Request Type","Applicant data") \
+                     + _build_dtdd("Subject",req_content["subject"]) \
+                     + _build_dtdd("Requestor Name",real_name) \
+                     + (_build_dtdd("Requestor Department", req_content["requestor_dept"]) if "requestor_dept" in req_content \
+                            else "") \
+                     + _build_dtdd("Due Date",req_content['due_date']) \
+                     + (_build_dtdd("Requestor Position",req_content["requestor_position"]) if "requestor_position" in req_content \
+                             else "") \
+                     + _build_requested_before(req_content.get("prev_report_info")) \
+                     + _build_dtdd("Report Purpose",req_content["report_purpose"]) \
+                     + _build_terms("Admit Terms",req_content["terms"]) \
+                     + build_progs(req_content["progs"]) \
+                     + _build_list_choices(req_content["list_choices"]) \
+                     + (_build_dtdd("Extra Details",req_content["extra_details"]) \
+                         if "extra_details" in req_content else "") \
+                     + _build_requested_fields(req_content["requested_fields"]) \
+                     + "</dl>"
+            return result
+
+        super().__init__("admissions",get_subject,get_ticket_content)
+

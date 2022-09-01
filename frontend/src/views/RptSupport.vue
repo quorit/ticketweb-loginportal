@@ -44,8 +44,8 @@
                   label="Position"
                   required/>
                <DateMenu 
-                :rules = "dueDateRules"
-                v-model = "dueDate"
+                :rules="dueDateRules"
+                v-model="due_date"
                />
             </v-col>
          </v-row>
@@ -74,6 +74,18 @@
                   required/>
             </v-col>
          </v-row>
+         <v-row>
+             <v-col cols="12">
+                  <p>Enter any needed attachments
+                  <br/>
+                  <span class='text-caption'>(Drag and drop is not available)</span>
+                  </p>
+                 <RptFileInput
+                  v-model="files"/>
+
+             </v-col>
+
+         </v-row>
 
   
   </FormShell>
@@ -90,17 +102,18 @@
 import DateMenu from '../components/DateMenu.vue'
 import FormShell from '../components/FormShell.vue'
 import ReportChoice from '../components/ReportChoice.vue'
-
+import RptFileInput from '../components/FileInput.vue'
 
 
 
 export default {
    name: 'RptSupport',
-   components: { 
-      FormShell,
-      DateMenu,
-      ReportChoice
-   },
+   components: {
+    FormShell,
+    DateMenu,
+    ReportChoice,
+    RptFileInput
+},
    data: function() {
       
       return {
@@ -108,7 +121,7 @@ export default {
          requestor_dept: '',
          requestor_email: this.$store.state.user_data.mail,
          requestor_position: '',
-         dueDate: '',
+         due_date: '',
          requestorEmailRules: [
             v => !!v || 'E-mail is required',
             v => /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(v) || 'E-mail must be valid'
@@ -139,10 +152,16 @@ export default {
                }
             }
          ],
+         
+         
+
+
+
          requestorPositionRules: [
          ],
          support_request_descr: '',
-         source_choice: null
+         source_choice: null,
+         files: []
       };
    },
    methods: {
@@ -151,8 +170,9 @@ export default {
          this.requestor_dept="";
          this.requestor_position="";
          this.support_request_descr="";
-         this.dueDate="";
+         this.due_date="";
          this.source_choice=null;
+         this.files=[];
       },
       
 
@@ -170,25 +190,30 @@ export default {
          return this.submission_data();
       },
       submission_data: function(){
+         //var content_data = {
+         //   request_type: "rptsupport",
+         //   due_date: this.due_date,
+         //};
          var content_data = {
-            request_type: "rptsupport",
-            dueDate: this.dueDate,
+            json: {},
          };
-         if (this.requestor_name){
-            content_data.requestor_name = this.requestor_name;
-         }
+         content_data.json.due_date = this.due_date
+         //if (this.requestor_name){
+         //   content_data.requestor_name = this.requestor_name;
+         //}
          if (this.requestor_dept){
-            content_data.requestor_dept = this.requestor_dept;
+            content_data.json.requestor_dept = this.requestor_dept;
          }
          if (this.requestor_position){
-            content_data.requestor_position = this.requestor_position;
+            content_data.json.requestor_position = this.requestor_position;
          }
          if (this.support_request_descr){
-            content_data.support_request_descr = this.support_request_descr;
+            content_data.json.support_request_descr = this.support_request_descr;
          }
          if(this.source_choice){
-            content_data.source_choice = this.source_choice;
+            content_data.json.source_choice = this.source_choice;
          }
+         content_data.attachments=this.files;
          return content_data;
       },
 

@@ -72,8 +72,7 @@
 <script>
   
 
-import {create_html} from '../js_extra/ticket_content.js';
-import {submit_json,get_app_token,SessionAuthenticationError} from '../js_extra/network.js';
+import {submit_data,get_app_token,SessionAuthenticationError} from '../js_extra/network.js';
 import {FormValidationError} from '../js_extra/web_project_error.js'
 import ErrorDiv from './ErrorDiv.vue'
 
@@ -119,15 +118,36 @@ export default {
          }));
       },
 
+   
+
 
       submit_ticket: async function () {
          this.processing_request=true;
          this.submit_fail=false;
          var response_json=null;
+
+         const formData = new FormData();
+         formData.append("json",
+            new Blob([
+               JSON.stringify(this.submissionData.json)
+            ], {
+               type: "application/json"
+            }));
+         for (const file of this.submissionData.attachments){
+            formData.append("attachment",file);
+         }
+
+
+
          try {
+            
+
+
+
             response_json = await get_app_token()
                                  .then(this.validate_form)
-                                 .then(app_token => submit_json(this.submission_data(),this.formType,app_token))
+                                 .then(this.read_files)
+                                 .then(app_token => submit_data(formData,this.formType,app_token))
          } catch(e){
             if (e instanceof SessionAuthenticationError){
                //this should cover...missing session cookie, expired session
@@ -145,22 +165,6 @@ export default {
          this.ticket_id = response_json.id
          this.processing_request=false;
       },
-      submission_data: function(){
-         var returnObj = {
-            content_data: create_html(this.initData,this.formType,this.submissionData),
-         };
-         if (this.formType != "rptsupport"){
-            returnObj.subject = this.submissionData.subject
-         }
-
-
-         if ('dueDate' in this.submissionData){
-            returnObj.due_date=this.submissionData.dueDate;
-          
-         }
-         return returnObj;
-      },
-
       reset_all: async function(){
         try {
            await get_app_token(); //don't care what the app_token is
@@ -182,7 +186,7 @@ export default {
    },
    computed:{
       submission_display: function() {
-         return this.submission_data();
+         return this.submissionData;
       }      
       
    },

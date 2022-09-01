@@ -39,7 +39,7 @@
             <v-col cols="6">
                <DateMenu 
                 :rules = "dueDateRules"
-                v-model = "dueDate"
+                v-model = "due_date"
                />
             </v-col>
          </v-row>
@@ -252,7 +252,18 @@
 -->
              </v-col>
          </v-row>
+         <v-row>
+             <v-col cols="12">
+                  <p>Enter any needed attachments
+                  <br/>
+                  <span class='text-caption'>(Drag and drop is not available)</span>
+                  </p>
+                 <RptFileInput
+                  v-model="files"/>
 
+             </v-col>
+
+         </v-row>
 
   </FormShell>
 
@@ -271,6 +282,7 @@ import DateMenu from '../components/DateMenu.vue'
 // import SelectFields from '../components/SelectFields.vue'
 import TermSelect from '../components/TermSelect.vue'
 import FormShell from '../components/FormShell.vue'
+import RptFileInput from '../components/FileInput.vue'
 
 import {get_strm_bounds, get_current_term} from '../js_extra/utils.js';
 
@@ -286,7 +298,8 @@ export default {
       DateMenu,
       // SelectFields,
       TermSelect,
-      FormShell
+      FormShell,
+      RptFileInput
    },
    data: function() {
       var current_term = get_current_term();
@@ -313,7 +326,7 @@ export default {
          requestor_dept: '',
          requestor_email: this.$store.state.user_data.mail,
          requestor_position: '',
-         dueDate: '',
+         due_date: '',
          subject: '',
          requested_before_selection: 0,
          extra_details: "",
@@ -384,7 +397,8 @@ export default {
                         }
          ],
          field_list: field_list,
-         route_type: route_type
+         route_type: route_type,
+         files: []
       };
    },
    methods: {
@@ -423,8 +437,9 @@ export default {
          }
          this.progs_selected={};
          this.terms_selected=[];
-         this.dueDate='';
+         this.due_date='';
          this.requested_fields=[];
+         this.files=[];
       }
 
    },
@@ -450,33 +465,34 @@ export default {
 
       },
       submission_data: function(){
+
+
          var content_data = {
-            subject: this.subject,
-            requested_fields: this.requested_fields,
-            dueDate: this.dueDate,
-            request_type: this.$route.params.type
+            json: { 
+               subject : this.subject,
+               requested_fields: this.requested_fields,
+               due_date: this.due_date
+            }
          };
-         if (this.requestor_name){
-            content_data.requestor_name = this.requestor_name;
-         }
+
          if (this.requestor_dept){
-            content_data.requestor_dept = this.requestor_dept;
+            content_data.json.requestor_dept = this.requestor_dept;
          }
          if (this.requestor_position){
-            content_data.requestor_position = this.requestor_position;
+            content_data.json.requestor_position = this.requestor_position;
          }
          if (this.prev_report_info){
-            content_data.prev_report_info = this.prev_report_info;
+            content_data.json.prev_report_info = this.prev_report_info;
          }
          if (this.report_purpose){
-            content_data.report_purpose = this.report_purpose;
+            content_data.json.report_purpose = this.report_purpose;
          }
 
          if (this.terms_selected.length >0){
-            content_data.terms = this.terms_selected;
+            content_data.json.terms = this.terms_selected;
          }
          if (Object.keys(this.progs_selected).length > 0){
-            content_data.progs = this.progs_selected;
+            content_data.json.progs = this.progs_selected;
          }
          var list_choices_exist=false;
          var list_choices_local={};
@@ -488,11 +504,12 @@ export default {
             }
          }
          if(list_choices_exist){
-            content_data.list_choices = list_choices_local;
+            content_data.json.list_choices = list_choices_local;
          }
          if (this.extra_details){
-            content_data.extra_details = this.extra_details;
+            content_data.json.extra_details = this.extra_details;
          }
+         content_data.attachments=this.files;
          return content_data;
       }
 
