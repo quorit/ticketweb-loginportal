@@ -2,6 +2,8 @@
    <v-file-input
     v-model="files"
     colorg="deep-purple accent-4"
+    @change="change_event()"
+    @click:clear="clear_event()"
     counter
     label="Attachments"
     multiple
@@ -64,16 +66,36 @@ export default {
                }
                return true;
             },
-           
-
-
-         ]
+            ],
+            old_files: [],
+            clear_happend: false
         };
+    },
+    methods: {
+      change_event(){
+        if (!this.clear_happened && this.files.length==0){
+          this.files=this.old_files.slice();
+        }
+        this.clear_happened=false;
+        this.old_files=this.files.slice();
+      },
+      clear_event(){
+        this.clear_happened=true;
+      },
+
+
     },
     watch: {
         files: function(){
+            this.old_files=this.files;
             const new_val = this.files.slice();
             this.$emit('input',new_val);
+            console.log(JSON.stringify(this.files));
+        },
+        value: function(){
+          if (this.files.length != this.value.length){
+             this.files = this.value.slice();
+          }
         }
     }
 }

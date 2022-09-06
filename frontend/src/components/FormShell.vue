@@ -17,6 +17,26 @@
 
    </v-container>
    <v-container v-else>
+      <v-dialog v-model="show_submit_confirm">
+              <v-card>
+                <v-card-title>
+                    Warning!
+                </v-card-title>
+                <v-card-text>
+                    <div>
+                       If you reset the form all of your work will be lost. Proceed anyway?
+                    </div>
+                </v-card-text>
+
+                <v-card-actions>
+                  <v-btn @click="show_submit_confirm=false">Cancel</v-btn>
+                <v-btn @click="reset_all()">Proceed</v-btn>
+                </v-card-actions>
+              </v-card>
+    </v-dialog>
+
+
+
       <v-row>
          <v-col cols="12">
             <h1>{{ heading }}</h1>
@@ -38,7 +58,7 @@
                </v-btn>
                <v-btn
                   class="ma-2"
-                  @click="reset_all()"
+                  @click="show_submit_confirm=true"
                   :disabled="processing_request">
                   Reset this form
                </v-btn>
@@ -99,7 +119,8 @@ export default {
          submit_fail: false,
          submit_error: null,
          devel_mode: process.env.NODE_ENV === 'development',
-         ticket_id: null
+         ticket_id: null,
+         show_submit_confirm: false
       };
    },
    methods: {
@@ -180,9 +201,9 @@ export default {
         }
         this.clearFunc();
         this.submit_fail=false;
+        this.show_submit_confirm=false;
         this.$refs.form.resetValidation();
-      }
-
+      },
    },
    computed:{
       submission_display: function() {
