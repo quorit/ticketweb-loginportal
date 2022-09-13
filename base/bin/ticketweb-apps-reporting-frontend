@@ -3,6 +3,8 @@
 usage()
 {
   echo "Usage: ticketweb-frontend <venv_root> { build | serve }"
+# when we upgrade to vite 'serve' will become 'dev'
+
   exit 2
 }
 

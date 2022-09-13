@@ -31,7 +31,9 @@ function get_error_params(e){
     if (e instanceof WebProjectError){
         return_val.error_type = e.name;
         if (e instanceof HTTPResponseError){
-            return_val.status_code=e.status_code.toString();
+            console.log("OI")
+            const status_code = e.status_code || "0";
+            return_val.status_code=status_code;
         }
     }else{
         return_val.error_type = "Uncategorized";

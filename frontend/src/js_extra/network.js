@@ -34,6 +34,8 @@ function test_ok(response,session=false) {
        if (response.ok){
           resolve (response);
        }else{
+         console.log("bye son");
+         console.log(response);
          console.log(response.status);
          var str = "Server returned " + response.status + " : " + response.statusText;
          if (session){
