@@ -22,20 +22,12 @@ ticketweb_venv_root="$1"
 mode="$2"
 
 
-cat $ticketweb_venv_root/etc/ticketweb/applications/reporting/config.json
-
-for row in $(cat $ticketweb_venv_root/etc/ticketweb/applications/reporting/config.json \
-	             | jq -r '.frontend_env_vars | keys[]' ); do
-    val=$(cat $ticketweb_venv_root/etc/ticketweb/applications/reporting/config.json \
-                     | jq -r ".frontend_env_vars.$row" )
-    export "$row"="$val"
-    # export $row
-done
+cat $ticketweb_venv_root/etc/ticketweb/applications/reporting/frontend-config.json
 
 
-shared_data_server_port=$(cat "$ticketweb_venv_root"/etc/ticketweb/applications/reporting/config.json \
-	                      | jq --raw-output .devel_settings.shared_data_server_port )
 
+VUE_APP_CONFIG_DATA=$(cat $ticketweb_venv_root/etc/ticketweb/applications/reporting/frontend-config.json) 
+export VUE_APP_CONFIG_DATA
 
 
 

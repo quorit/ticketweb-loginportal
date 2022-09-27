@@ -1,35 +1,42 @@
 const { defineConfig } = require('@vue/cli-service')
 const path = require("path")
 
+const config_data = JSON.parse(process.env.VUE_APP_CONFIG_DATA);
+
+
+
+
+
 module.exports = {
   transpileDependencies: [
     'vuetify'
   ],
-  publicPath: process.env.VUE_APP_PUBLIC_PATH,
+  publicPath: config_data.vue_app_path_roots.frontend,
   outputDir: path.resolve(process.env.VUE_APP_VENV_ROOT,"srv/ticketweb/applications/reporting/frontend"),
   devServer: (process.env.NODE_ENV=='development')?{
-    port: process.env.VUE_APP_PORT,
+    port: config_data.port,
     proxy: {
-         ['^' + process.env.VUE_APP_SHARED_DATA_PATH]: {
-            target: process.env.VUE_APP_SHARED_DATA_SERVER_URL,
+         ['^' + config_data.vue_app_path_roots.shared_data]: {
+            target: config_data.devel_server_proxies.shared_data,
             pathRewrite: {
-               ['^' + process.env.VUE_APP_SHARED_DATA_PATH]: '/'
+               ['^' + config_data.vue_app_path_roots.shared_data]: '/'
             }
          },
-	 ['^' + process.env.VUE_APP_AUTHSYSTEM_PATH]: {
-              target: process.env.VUE_APP_AUTHSYSTEM_SERVER_URL,
-              pathRewrite: {
-                ['^' + process.env.VUE_APP_AUTHSYSTEM_PATH]: '/'
-              }
-         },
-         ['^' + process.env.VUE_APP_APP_SERVER_PATH]: {
-            target: process.env.VUE_APP_APP_SERVER_URL,
+
+         ['^' + config_data.vue_app_path_roots.authsystem]: {
+            target: config_data.devel_server_proxies.authsystem,
             pathRewrite: {
-               ['^' + process.env.VUE_APP_APP_SERVER_PATH]: '/'
+               ['^' + config_data.vue_app_path_roots.authsystem]: '/'
+            }
+         },
+
+
+         ['^' + config_data.vue_app_path_roots.app_server]: {
+            target: config_data.devel_server_proxies.app_server,
+            pathRewrite: {
+               ['^' + config_data.vue_app_path_roots.app_server]: '/'
             }
          }
-
-
 
 
    }

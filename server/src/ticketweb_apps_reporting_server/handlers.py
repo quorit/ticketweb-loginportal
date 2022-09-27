@@ -4,17 +4,11 @@ import json
 import re
 import time
 import os
-import ldap
 import sys
 import requests
-import urllib
 import html
-import tempfile
-from requests_toolbelt.multipart.encoder import MultipartEncoder
-from contextlib import ExitStack
-
-
-
+from ticketweb_rt_interface.handlers import SubmitTicket
+from .config_data import config_data
 
 class BadRequest(Exception):
     def __init__(self,message,status):
@@ -214,7 +208,7 @@ class BadRequestContentNotMultipart(BadRequest):
 
 
 def _get_user_id_from_jwt_data(req):
-    receive = requests.get(_config_data["pub_key_url"])
+    receive = requests.get(config_data["pub_key_url"])
     if receive.status_code != 200:
             raise Exception("Failed commmunication with token server")
     pub_key=receive.text
@@ -272,323 +266,12 @@ def create_response_body_user_data(display_name,mail):
 
 
 
-def _canonicalise_userid(userid):
-    userid_local = userid.lower()
-    re_pattern = r"^[0-9a-z]+$"
-    if re.search(re_pattern,userid_local):
-        return userid_local
-    re_pattern = r"^ad(\.queensu.ca){0,1}\\[0-9a-z]+$"
-    if re.search(re_pattern,userid_local):
-        return userid_local.split("\\")[1]
-    re_pattern = r"^[0-9a-z]+@ad\.queensu\.ca$"
-    if re.search(re_pattern,userid_local):
-        return userid_local.split("@")[0]
-     
 
 
 
-if sys.base_prefix != sys.prefix:
-    etc_path = sys.prefix + "/etc"
-else:
-    etc_path = "/etc"
 
 
 
-
-def _get_config_data_all():
-    print(etc_path)
-    ldap_file = os.path.join(etc_path,"ticketweb/applications/reporting/config.json")
-
-    f = open(ldap_file,"r")
-    ldap_data = json.load(f)
-    f.close()
-    return ldap_data
-
-
-_config_data = _get_config_data_all()
-
-
-def _get_rt_api_token():
-    api_token_exec = _config_data["rt"]["api_token_exec"]
-    api_token = os.popen(api_token_exec).read()
-    return api_token
-
-
-_rt_api_token = _get_rt_api_token()
-
-
-
-
-def _get_pw():
-    password_exec = _config_data["ldap"]["password_exec"]
-    pw = os.popen(password_exec).read()
-    return pw
-
-
-_service_account_pw = _get_pw()
-
-
-
-
-def _get_ldap_handle():
-        ldap_data = _config_data["ldap"]
-        url = ldap_data["url"]
-        ldap_handle  = ldap.initialize(url)
-        service_account_dn = ldap_data["dn"]
-        ldap_handle.simple_bind_s(service_account_dn,_service_account_pw)
-        return ldap_handle
-
-
-def _get_user_data(attributes,req):
-    user_dn = _get_user_id_from_jwt_data(req)
-    ldap_handle = _get_ldap_handle()
-    ldap_handle.set_option(ldap.OPT_REFERRALS, 0)
-    ldap_search_result = ldap_handle.search_s(user_dn,ldap.SCOPE_SUBTREE,"objectclass=*",attributes)
-    if not user_dn:
-            raise BadRequestUserNotFound(user_dn)
-    result_attributes = ldap_search_result[0][1]
-    result_dict = {}
-
-    for attribute in attributes:
-        result_dict[attribute]=result_attributes[attribute][0].decode(encoding='utf-8', errors='strict')
-    return result_dict
-
-
-
-
-
-
-class UserData ():
-
-    def on_get(self,req,resp):
-        user_data = _get_user_data(["displayName","mail"],req)
-        response_body = create_response_body_user_data(user_data["displayName"],user_data["mail"])
-        print(response_body)
-        resp.text=json.dumps(response_body)
-        resp.content_type = falcon.MEDIA_JSON
-        resp.status = falcon.HTTP_OK
-
-
-# def get_req_content(req):
-#    if req.content_length == 0:
-#        raise BadRequestNoContentReceived()
-#    req_content = json.load(req.stream)
-#    return req_content
-#    #need more tests. is content too large? does it actually parse
-
-
-
-class SubmitTicket():
-    def __init__(self,report_type,get_subject,get_ticket_content):
-        self.report_type=report_type
-        self.get_subject=get_subject
-        self.get_ticket_content=get_ticket_content
-    
-
-    
-
-
-
-
-
-
-    def on_post(self,req,resp):
-        def get_req_content(req,tempdir):
-            # Might want to test that content isn't too big here
-            if not req.content_type.startswith(falcon.MEDIA_MULTIPART):
-                raise BadRequestContentNotMultipart()
-            parts = req.get_media()
-            attachments = []
-            json_part = None
-            attach_count = 0
-            for part in parts:
-                if part.name == 'json':
-                    if json_part:
-                        raise BadRequestMultipleContentParts()
-                    if part.content_type != falcon.MEDIA_JSON:
-                        raise BadRequestContentNotJson()
-                    # if part.content_length == 0:
-                    #    raise BadRequestNoContentReceived()
-                    # testing for content_lenght probably won't work because
-                    # we probably won't have content length headers in the parts
-                    # In fact it's not a good test because it might not actually
-                    # be the same as the real content length.
-                    json_part = json.load(part.stream)
-                elif part.name == 'attachment':
-                    tmp_filename = os.path.join(tempdir,str(attach_count))
-                    tmp_file_s = open(tmp_filename, 'wb')
-                    try:
-                        part.stream.pipe(tmp_file_s)
-                    finally:
-                        tmp_file_s.close()
-                    attachments.append({
-                        "filename": part.filename,
-                        "content_type": part.content_type
-                    })
-                    attach_count = attach_count + 1
-            return {
-                "json": json_part,
-                "attachments": attachments
-            }
-
-        def get_due_date_rt(due_date):
-            return time.strftime("%Y-%m-%d %H:%M:%S" ,
-                                    time.gmtime(time.mktime(time.strptime(due_date + " 23:59:59",
-                                    "%Y-%m-%d %H:%M:%S"))))
-    # need to throw bad requestrs if the due date is unparseable.
-
-        user_data = _get_user_data(["displayName","mail","sAMAccountName"],req)
-        #For other form types this comes out of the request
-        
-
-
-        rt_path_base = _config_data["rt"]["path_base"]
-        auth_string = "Token " + _rt_api_token
-
-        headers = {
-            "Authorization": auth_string
-        }
-        mail = user_data["mail"]
-
-        mail_enc = urllib.parse.quote(mail)
-        rt_path= rt_path_base + "REST/2.0/"
-        print (rt_path + "user/" + mail_enc)
-        receive = requests.get(rt_path + "user/" + mail_enc,headers=headers)
-        
-        current_user_name = None
-
-        if receive.status_code == 200:
-            current_user_name = mail_enc
-        elif receive.status_code == 404:
-            receive = requests.get(rt_path + "user/" + user_data["sAMAccountName"],headers=headers)
-            if receive.status_code == 200:
-                current_user_name = user_data["sAMAccountName"]
-            elif receive.status_code != 404:
-                raise Exception("Failed RT communication")
-        else:
-            raise Exception("Failed RT communication")
-            # this will result in a 500 error for the user
-            # which is appropriate if this happens
-        
-        user_fields = {
-            "RealName": user_data["displayName"],
-            "Name": user_data["sAMAccountName"],
-            "EmailAddress": mail
-        }
-        
-        headers = {
-            "Authorization": auth_string,
-            "Content-Type": "application/json"
-        }
-
-        if not current_user_name:
-            receive = requests.post(rt_path + "user",headers=headers,json=user_fields)
-        else:
-            url = rt_path+"user/"+current_user_name
-            receive = requests.put(url,
-                                   headers=headers,
-                                   json=user_fields)
-        
-
-
-        if receive.status_code not in [200,201]:
-            print (receive.status_code)
-            raise Exception("Failed RT commmunication")
-
-
-        with tempfile.TemporaryDirectory() as temp_dir:
-            req_content = get_req_content(req,temp_dir)
-            json_part = req_content["json"]
-            due_date_rt = get_due_date_rt(json_part["due_date"])
-            real_name = user_data["displayName"]
-            ticket_content = self.get_ticket_content(real_name,json_part)
-            attachments = req_content["attachments"]
-            subject = self.get_subject(json_part)
-
-            internal_req_content = {
-                "Requestor": mail,
-                "Subject": subject,
-                "Queue": _config_data["rt"]["queue"],
-                "CustomFields": {
-                    "RequestType": self.report_type
-                },
-                "Content": ticket_content,
-                "ContentType": "text/html",
-                "Due": due_date_rt
-
-            }
-
-            print(internal_req_content)
-
-            mp_fields = [ 
-                            ('JSON', (None, json.dumps(internal_req_content)))
-                        ]
-
-
-
-            with ExitStack() as stack:
-                # See https://stackoverflow.com/questions/4617034/how-can-i-open-multiple-files-using-with-open-in-python
-                # for why exitstack is being used
-                # Note that if you do
-                #
-                # with open(file) as f:
-                #   blah
-                #
-                # f will always be closed no matter what,
-                # it's the same as doing:
-                #
-                # f = open(file)
-                # try:
-                #    do blah
-                # finally:
-                #    f.close()
-                #
-                # Either of these work for just one file,
-                # but what if i have an abitrary length list?
-                # this is where ExitStack comes in.
-                # If something should go wrong in the below code,
-                # all of the streams added to the exit stack will be guaranteed closed.
-
-
-                for attach_count in range(len(attachments)):
-                    srcfile = os.path.join(temp_dir,str(attach_count))
-                    stream = open(srcfile,'rb')
-                    stack.enter_context(stream)
-                    attachment = attachments[attach_count]
-                    filename = attachment["filename"]
-                    content_type = attachment["content_type"]
-                    mp_fields.append(('Attachments',(filename,stream,content_type)))
-            
-
-
-                mp_encoder = MultipartEncoder(
-                    fields = mp_fields
-                )
-
-                headers = {
-                    "Authorization": auth_string,
-                    "Content-Type": mp_encoder.content_type,
-                }
-
-
-                receive = requests.post(rt_path + "ticket",
-                                        headers=headers,
-                                        data=mp_encoder)
-
-
-        if receive.status_code != 201:
-            raise Exception("Failed RT commmunication")
-        resp.text=receive.text
-        resp.content_type = falcon.MEDIA_JSON
-        resp.status = falcon.HTTP_OK
-
-
-
-
-
-
-def _get_subject(req_content):
-    return req_content["subject"]
 
 
 
@@ -697,7 +380,7 @@ class SubmitTicketRptSupport(SubmitTicket):
                       + "</dl>"
             return result
 
-        super().__init__("rptsupport",get_subject,get_ticket_content)
+        super().__init__("rptsupport",get_subject,get_ticket_content,config_data)
 
 
 
@@ -766,7 +449,7 @@ class SubmitTicketStudent(SubmitTicket):
                      + _build_requested_fields(req_content["requested_fields"]) \
                      + "</dl>"
             return result
-        super().__init__("student",get_subject,get_ticket_content)
+        super().__init__("student",get_subject,get_ticket_content,config_data)
 
 
 
@@ -821,5 +504,5 @@ class SubmitTicketAdmissions(SubmitTicket):
                      + "</dl>"
             return result
 
-        super().__init__("admissions",get_subject,get_ticket_content)
+        super().__init__("admissions",get_subject,get_ticket_content,config_data)
 

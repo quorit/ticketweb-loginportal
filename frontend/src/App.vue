@@ -48,6 +48,10 @@
 import {delete_session} from './js_extra/network.js';
 import {get_error_params} from './js_extra/web_project_error.js'
 
+const config_data = JSON.parse(process.env.VUE_APP_CONFIG_DATA);
+
+
+
 export default {
   name: 'App',
 
@@ -56,8 +60,8 @@ export default {
   {
     var banner_color;
     var mode_text;
-    mode_text = process.env.VUE_APP_MODE_TEXT;
-    banner_color = process.env.VUE_APP_MODE_BANNER_COLOR;
+    mode_text = config_data.mode_text;
+    banner_color = config_data.banner_color;
 
     return {
       banner_color: banner_color,

@@ -2,8 +2,8 @@
 
 
 ticketweb_venv_root=$1
-shared_data_server_port=$(cat $ticketweb_venv_root/etc/ticketweb/applications/reporting/config.json \
-	                      | jq .devel_settings.shared_data_server_port \
+shared_data_server_port=$(cat $ticketweb_venv_root/etc/ticketweb/applications/reporting/shared-data-server-config.json \
+	                      | jq .port \
 			      | sed -e 's/^"//' -e 's/"$//')
 
 

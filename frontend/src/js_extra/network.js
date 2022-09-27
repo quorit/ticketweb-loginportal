@@ -19,12 +19,13 @@ class NetworkError extends WebProjectError {
    }
 }
 
+const config_data = JSON.parse(process.env.VUE_APP_CONFIG_DATA);
 
 
 
 
 
-const init_data_url = window.location.origin + process.env.VUE_APP_SHARED_DATA_PATH + "init_data.json";
+const init_data_url = window.location.origin + config_data.vue_app_path_roots.shared_data + "init_data.json";
 
 
 
@@ -78,7 +79,7 @@ function fetch_init_data(){
 
 
 
-const token_server_url = window.location.origin + process.env.VUE_APP_AUTHSYSTEM_PATH + "session/reporting"
+const token_server_url = window.location.origin + config_data.vue_app_path_roots.authsystem + "session/reporting"
 
 
 function get_app_token(){
@@ -116,7 +117,7 @@ function login_session(user_id, password){
 }
 
 
-const api_root = window.location.origin + process.env.VUE_APP_APP_SERVER_PATH;
+const api_root = window.location.origin + config_data.vue_app_path_roots.app_server;
 
 
 

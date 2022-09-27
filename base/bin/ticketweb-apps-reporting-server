@@ -46,7 +46,7 @@ ticketweb_venv_root=$1
 venv_id=$(systemd-escape --path "$ticketweb_venv_root")
 
 
-gunicorn_bind=$(cat $ticketweb_venv_root/etc/ticketweb/applications/reporting/config.json | jq .bind | tr -d '"')
+gunicorn_bind=$(cat $ticketweb_venv_root/etc/ticketweb/applications/reporting/app-server-config.json | jq .bind | tr -d '"')
 source "$ticketweb_venv_root/bin/activate"
 
 
