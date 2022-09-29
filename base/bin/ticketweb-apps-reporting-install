@@ -2,7 +2,7 @@
 
 #default values
 devel_mode=0
-venv_id=unset
+# venv_id=unset
 ticketweb_venv_root=unset
 
 
@@ -43,12 +43,12 @@ fi
 
 ticketweb_venv_root=$1
 
-venv_id=$(systemd-escape --path "$ticketweb_venv_root")
+# venv_id=$(systemd-escape --path "$ticketweb_venv_root")
 
-if [[ "$devel_mode" -eq 0 ]]; then
-   mkdir --parents --mode=770 /var/log/ticketweb/"$venv_id"/applications/reporting 
-   chown ticketweb_apps_reporting:ticketweb_apps_reporting /var/log/ticketweb/"$venv_id"/applications/reporting
-fi
+# if [[ "$devel_mode" -eq 0 ]]; then
+#   mkdir --parents --mode=770 /var/log/ticketweb/"$venv_id"/applications/reporting 
+#   chown ticketweb_apps_reporting:ticketweb_apps_reporting /var/log/ticketweb/"$venv_id"/applications/reporting
+# fi
 
 
 script_dir=$(dirname -- "$0")
@@ -92,8 +92,6 @@ fi
 
 mkdir --parents "$ticketweb_venv_root"/etc/ticketweb/applications/reporting
 
-
-#We might really want to switch to a branch matching the venv_id, like "preview" or "final".
 
 source $ticketweb_venv_root/bin/activate
 

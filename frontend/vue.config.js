@@ -14,17 +14,17 @@ module.exports = {
   publicPath: config_data.vue_app_path_roots.frontend,
   outputDir: path.resolve(process.env.VUE_APP_VENV_ROOT,"srv/ticketweb/applications/reporting/frontend"),
   devServer: (process.env.NODE_ENV=='development')?{
-    port: config_data.port,
+    port: config_data.devel_server.port,
     proxy: {
          ['^' + config_data.vue_app_path_roots.shared_data]: {
-            target: config_data.devel_server_proxies.shared_data,
+            target: config_data.devel_server.proxies.shared_data,
             pathRewrite: {
                ['^' + config_data.vue_app_path_roots.shared_data]: '/'
             }
          },
 
          ['^' + config_data.vue_app_path_roots.authsystem]: {
-            target: config_data.devel_server_proxies.authsystem,
+            target: config_data.devel_server.proxies.authsystem,
             pathRewrite: {
                ['^' + config_data.vue_app_path_roots.authsystem]: '/'
             }
@@ -32,7 +32,7 @@ module.exports = {
 
 
          ['^' + config_data.vue_app_path_roots.app_server]: {
-            target: config_data.devel_server_proxies.app_server,
+            target: config_data.devel_server.proxies.app_server,
             pathRewrite: {
                ['^' + config_data.vue_app_path_roots.app_server]: '/'
             }

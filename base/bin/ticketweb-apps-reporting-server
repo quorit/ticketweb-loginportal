@@ -53,9 +53,10 @@ source "$ticketweb_venv_root/bin/activate"
 if [[ "$devel_mode" -eq 1 ]]; then
     gunicorn --log-level debug --reload --bind $gunicorn_bind ticketweb_apps_reporting_server.app:main\(\)
 else
+    log_dir=$(cat $ticketweb_venv_root/etc/ticketweb/applications/reporting/app-server-config.json | jq .log_dir | tr -d '"')
     gunicorn --bind $gunicorn_bind \
-             --access-logfile=/var/log/ticketweb/$venv_id/applications/reporting/server-access.log \
-             --error-logfile=/var/log/ticketweb/$venv_id/applications/reporting/server-error.log \
+             --access-logfile="$log_dir"/server-access.log \
+             --error-logfile="$log_dir"/server-error.log \
              --pid /run/ticketweb/$venv_id/applications/reporting/server.pid \
              ticketweb_apps_reporting_server.app:main\(\)
 fi
