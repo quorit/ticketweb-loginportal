@@ -97,13 +97,13 @@ source $ticketweb_venv_root/bin/activate
 
 if [[ "$devel_mode" -eq 0 ]]; then
     pip install --force-reinstall "git+https://github.com/quorit/ticketweb-apps-reporting.git#subdirectory=server"
-    pip install --force-reinstall "git+https://github.com/quorit/ticketweb-rt-interface.git"
+    pip install --force-reinstall "git+https://github.com/quorit/ticketweb-rt-interface.git#subdirectory=server_module"
 
 else
     cd "$app_git_repo_dir"/server
     echo $(pwd)
     pip install --editable .
-    cd "$rt_interface_git_repo_dir"
+    cd "$rt_interface_git_repo_dir"/server_module
     echo $(pwd)
     pip install --editable .
 
@@ -117,6 +117,8 @@ mkdir --parents "$ticketweb_venv_root"/srv/ticketweb/applications/reporting/fron
 if [[ "$devel_mode" -eq 0 ]]; then
    cd "$frontend_src_dir"
    npm install
+   npm install git+https://github.com/quorit/ticketweb-authsystem.git/frontend_module
+   npm install git+https://github.com/quorit/ticketweb-rt-interface.git/frontend_module
 fi
 
 if [[ "$devel_mode" -eq 1 ]]; then

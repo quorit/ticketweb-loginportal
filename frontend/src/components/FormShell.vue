@@ -92,9 +92,18 @@
 <script>
   
 
-import {submit_data,get_app_token,SessionAuthenticationError} from '../js_extra/network.js';
+const authsystem_network = require ("authsystem_network");
+const rt_network = require ("rt_network");
+
+
 import {FormValidationError} from '../js_extra/web_project_error.js'
 import ErrorDiv from './ErrorDiv.vue'
+
+const config_data = JSON.parse(process.env.VUE_APP_CONFIG_DATA);
+
+const authsystem_path = config_data.vue_app_path_roots.authsystem;
+const app_server_path = config_data.vue_app_path_roots.app_server;
+
 
 export default {
    name: 'FormShell',
@@ -147,30 +156,21 @@ export default {
          this.submit_fail=false;
          var response_json=null;
 
-         const formData = new FormData();
-         formData.append("json",
-            new Blob([
-               JSON.stringify(this.submissionData.json)
-            ], {
-               type: "application/json"
-            }));
-         for (const file of this.submissionData.attachments){
-            formData.append("attachment",file);
-         }
 
 
 
          try {
             
 
-
-
-            response_json = await get_app_token()
-                                 .then(this.validate_form)
-                                 .then(this.read_files)
-                                 .then(app_token => submit_data(formData,this.formType,app_token))
+            response_json = await authsystem_network.get_app_token(authsystem_path,"reporting")
+                            .then(this.validate_form)
+                            .then(app_token => rt_network.submit_data(this.submissionData.json,
+                                                           this.submissionData.attachments,
+                                                           this.formType,
+                                                           app_token,
+                                                           app_server_path));
          } catch(e){
-            if (e instanceof SessionAuthenticationError){
+            if (e instanceof authsystem_network.SessionAuthenticationError){
                //this should cover...missing session cookie, expired session
                //anyhitng that would result in an "401 Unauthorized". Don't forget that
                //the language of 'Unauthorized' in HTTP codes is wrong
@@ -188,9 +188,9 @@ export default {
       },
       reset_all: async function(){
         try {
-           await get_app_token(); //don't care what the app_token is
+           await authsystem_network.get_app_token(authsystem_path,"reporting"); //don't care what the app_token is
         } catch (e){
-           if (e instanceof SessionAuthenticationError){
+           if (e instanceof authsystem_network.SessionAuthenticationError){
                //this should cover...missing session cookie, expired session
                //anyhitng that would result in an "401 Unauthorized". Don't forget that
                //the language of 'Unauthorized' in HTTP codes is wrong

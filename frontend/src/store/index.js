@@ -1,7 +1,14 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import { fetch_init_data, get_user_data } from '../js_extra/network.js'
+
+const rt_network = require("rt_network");
+
 Vue.use(Vuex)
+
+const config_data = JSON.parse(process.env.VUE_APP_CONFIG_DATA);
+const shared_data_path = config_data.vue_app_path_roots.shared_data;
+
+const app_server_path = config_data.vue_app_path_roots.app_server;
 
 export default new Vuex.Store({
   state: {
@@ -19,7 +26,7 @@ export default new Vuex.Store({
   actions: {
     set_init_data(context){
 
-      return fetch_init_data().then(
+      return rt_network.fetch_init_data(shared_data_path).then(
         init_data => new Promise((resolve) => {
           context.commit('set_init_data',init_data);
           resolve(true);
@@ -27,7 +34,7 @@ export default new Vuex.Store({
       );
     },
     set_user_data(context,app_token){
-      return get_user_data(app_token).then(
+      return rt_network.get_user_data(app_token,app_server_path).then(
         response_json => new Promise ((resolve) => {
           context.commit('set_user_data',response_json);
           resolve(true);

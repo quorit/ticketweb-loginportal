@@ -22,8 +22,9 @@
 
 <script>
 
-import { HTTPResponseError } from "../js_extra/web_project_error.js"
-import { SessionAuthenticationError,NetworkError } from "../js_extra/network.js";
+const rt_network = require("rt_network");
+
+const authsystem_network = require ("authsystem_network");
 
 import ErrorDiv from '../components/ErrorDiv.vue'
 
@@ -44,11 +45,15 @@ export default {
     methods: {
         props_to_error: function(){
             if (this.error_type=='SessionAuthenticationError'){
-                return new SessionAuthenticationError("");
-            }else if (this.error_type=='HTTPResponseError'){
-                return new HTTPResponseError(parseInt(this.status_code),"")
-            }else if (this.error_type=='NetworkError'){
-                return new NetworkError("");
+                return new authsystem_network.SessionAuthenticationError("");
+            }else if (this.error_type=='AuthSystemHTTPResponseError'){
+                return new authsystem_network.HTTPResponseError(parseInt(this.status_code),"")
+            }else if (this.error_type=='AuthSystemConnectionError'){
+                return new authsystem_network.ConnectionError("");
+            }else if (this.error_type=='RT_HTTPResponseError'){
+                return new rt_network.HTTPResponseError(parseInt(this.status_code),"")
+            }else if (this.error_type=='RT_ConnectionError'){
+                return new rt_network.ConnectionError("");
             }else{
                 return new Error("");
             }

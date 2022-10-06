@@ -76,11 +76,15 @@
 
 <script>
   
+const authsystem_network = require ("authsystem_network");
 
-import {login_session} from '../js_extra/network.js';
+
 import {FormValidationError} from "../js_extra/web_project_error.js"
 import ErrorDiv from '../components/ErrorDiv.vue'
 
+const config_data = JSON.parse(process.env.VUE_APP_CONFIG_DATA);
+
+const authsystem_path = config_data.vue_app_path_roots.authsystem;
 
 
 
@@ -117,7 +121,7 @@ export default {
          this.processing_request=true;
          this.login_fail=false;
          try {
-            await login_session(this.net_id,this.password);
+            await authsystem_network.login_session(this.net_id,this.password,authsystem_path,"reporting");
          } catch (e) {
             this.login_error = e;
             this.processing_request=false;

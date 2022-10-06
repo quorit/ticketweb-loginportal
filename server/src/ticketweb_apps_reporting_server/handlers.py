@@ -207,72 +207,12 @@ class BadRequestContentNotMultipart(BadRequest):
 
 
 
-def _get_user_id_from_jwt_data(req):
-    receive = requests.get(config_data["pub_key_url"])
-    if receive.status_code != 200:
-            raise Exception("Failed commmunication with token server")
-    pub_key=receive.text
-
-    req_auth_hdr = req.get_header('Authorization')
-    if not req_auth_hdr:
-        raise BadRequestMissingHeader('Authorization')
-    if len(req_auth_hdr) > 2048:
-        raise BadRequestHeaderTooBig()
-    re_pattern = r"^Bearer [-a-zA-Z0-9._]+$"
-    if not re.search(re_pattern,req_auth_hdr):
-        raise BadRequestHeaderBadFormatJWT()
-    req_token = req_auth_hdr[len("Bearer "):]
-    try:
-        req_decoded = jwt.decode(
-                req_token,pub_key,
-                algorithms=['RS256'],
-                options={"require": ["user_id","exp"]})
-    except jwt.exceptions.ExpiredSignatureError as e:
-        raise BadRequestExpiredToken()
-    except jwt.exceptions.InvalidTokenError as e:
-        # note that if the exp part of the claim has expired an exception will be thrown
-        # (That test is built in)
-        raise BadRequestInvalidJWT_Token() from e
-    user_id = req_decoded['user_id']
-    if not isinstance(user_id,str):
-        raise BadRequestRoleNotString()
-    return user_id
-
-
-
-def create_token(secret,user_id, duration):
-
-     exp_time = int(time.time()) + 60 * duration
-     exp_time_english = time.ctime(exp_time)
-     jwt_payload = {
-         'user_id': user_id,
-         'exp': exp_time
-     }
-     headers = {
-        'alg': "HS256",
-        'typ': "JWT"
-     }
-     jwt_token = jwt.encode(jwt_payload, secret, algorithm='HS256')
-     return jwt_token
-
-
 
 def create_response_body_user_data(display_name,mail):
     return {
             "display_name": display_name,
             "mail": mail
         }
-
-
-
-
-
-
-
-
-
-
-
 
 
 

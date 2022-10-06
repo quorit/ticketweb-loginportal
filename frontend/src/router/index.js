@@ -5,12 +5,12 @@ import ReportingForm from '../views/Reporting.vue'
 import RptSupport from '../views/RptSupport.vue'
 import ErrorPage from '../views/ErrorPage.vue'
 import LoginForm from '../views/Login.vue'
-import {SessionAuthenticationError, get_app_token} from '../js_extra/network.js'
+
+const authsystem_network = require ("authsystem_network");
 import {get_error_params} from '../js_extra/web_project_error.js'
 import store from '../store'
 
 Vue.use(VueRouter)
-
 
 
 
@@ -68,6 +68,9 @@ const router = new VueRouter({
 });
 
 
+const config_data = JSON.parse(process.env.VUE_APP_CONFIG_DATA);
+
+const authsystem_path = config_data.vue_app_path_roots.authsystem;
 
 
 router.beforeEach(async (to,from,next) => {
@@ -90,12 +93,11 @@ router.beforeEach(async (to,from,next) => {
 
     
 
-
     if((to.name == 'reporting_request_forms' || to.name == 'reporting_support_form')){
 
 
         try{
-            await get_app_token().then(app_token => store.dispatch('set_user_data',app_token));
+            await authsystem_network.get_app_token(authsystem_path,"reporting").then(app_token => store.dispatch('set_user_data',app_token));
             //Note that I am re-fetching the user data every time we go to a new page (other than login or error).
             //This is because in another window the user could log out and log in as someone else.
             //and if this app were any more involved, there would be links going from one route to another
@@ -115,7 +117,7 @@ router.beforeEach(async (to,from,next) => {
             //to go to from one page to another without reloading the app, but we are not assuming
             //that the app will always be limited in this way.
         } catch (e) {
-            if (e instanceof SessionAuthenticationError){
+            if (e instanceof authsystem_network.SessionAuthenticationError){
                 //this should cover...missing session cookie, expired session
                 //anyhitng that would result in an "401 Unauthorized". Don't forget that
                 //the language of 'Unauthorized' in HTTP codes is wrong

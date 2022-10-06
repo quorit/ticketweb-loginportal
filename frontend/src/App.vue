@@ -45,12 +45,13 @@
 
 <script>
 
-import {delete_session} from './js_extra/network.js';
+const authsystem_network = require ("authsystem_network");
 import {get_error_params} from './js_extra/web_project_error.js'
+
 
 const config_data = JSON.parse(process.env.VUE_APP_CONFIG_DATA);
 
-
+const authsystem_path = config_data.vue_app_path_roots.authsystem;
 
 export default {
   name: 'App',
@@ -60,9 +61,9 @@ export default {
   {
     var banner_color;
     var mode_text;
-    mode_text = config_data.mode_text;
-    banner_color = config_data.banner_color;
-
+    mode_text = config_data.banner.mode_text;
+    banner_color = config_data.banner.color;
+    
     return {
       banner_color: banner_color,
       mode_text: mode_text
@@ -72,7 +73,7 @@ export default {
   methods: {
     logout: async function(){
       try {
-         await delete_session();      
+         await authsystem_network.delete_session(authsystem_path,"reporting");      
       } catch (e) {
           this.$router.push( {                    
                     name: "error_page",

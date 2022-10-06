@@ -38,14 +38,16 @@
 
 <script>
 
+const config_data = JSON.parse(process.env.VUE_APP_CONFIG_DATA);
+
 export default {
     name: 'RptFileInput',
     props: {
         value: Array
     },
     data: function() {
-        const max_file_count = process.env.VUE_APP_MAX_ATTACHCOUNT || 5;
-        const max_upload=process.env.VUE_APP_MAX_UPLOAD_SIZE_MB || 6;
+        const max_file_count = config_data.attachments.max_attach_count || 5;
+        const max_upload = config_data.attachments.max_upload_size_mb || 6;
         const max_upload_bytes = max_upload * 1000000;
         return {
             files: this.value.slice(), //shallow copy

@@ -6,7 +6,7 @@ devel_mode=0
 
 usage()
 {
-  echo "Usage 1: install --devel-mode"
+  echo "Usage 1: install --devel-mode <rt-interface-git-repo-path> <authsystem-git-repo-path>"
   echo "Usage 2: install"
   exit 2
 }
@@ -18,6 +18,8 @@ VALID_ARGUMENTS=$?
 if [ "$VALID_ARGUMENTS" != "0" ]; then
   usage
 fi
+
+
 
 
 eval set -- "$PARSED_ARGUMENTS"
@@ -34,7 +36,7 @@ do
   esac
 done
 
-if (( $devel_mode == 1 && $# != 0 || $devel_mode == 0 && $# != 0 )); then
+if (( $devel_mode == 1 && $# != 2 || $devel_mode == 0 && $# != 0 )); then
     usage
 fi
 
@@ -54,9 +56,17 @@ if [[ "$devel_mode" -eq 0 ]]; then
 
 
 else
+    # we are in devel mode
     mkdir --parents "$HOME"/.local/bin
     ln --symbolic --force "$script_dir"/base/bin/* "$HOME"/.local/bin
+    rt_interface_root=$1
+    authsystem_root=$2
+    cd "$rt_interface_root"/frontend_module
+    sudo npm link
+    cd "$authsystem_root"/frontend_module
+    sudo npm link
     cd "$script_dir"/frontend
     npm install
+    npm link authsystem_network rt_network
 fi
 
