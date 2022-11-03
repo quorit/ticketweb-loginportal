@@ -57,7 +57,9 @@
                     multiple
                     chips
                     deletable-chips
-                    :rules = "[v => v.length > 0 || 'You must specifify one or more items']"
+                    @update:error="error_handler"
+                    :rules="combobox_rules"
+                    :grules="[v => v.length > 0 || 'You must specifify one or more items']"
                 >
                 <template v-slot:label>
                      Enter items here.
@@ -147,11 +149,32 @@ export default {
             selected_internal: [],
             extension_choices: extension_choices,
             all_selected: false,
-            list_vals_keys: Object.keys(this.list_vals)
+            list_vals_keys: Object.keys(this.list_vals),
+            combobox_rules: [(v)=>{
+            if (v.length==0){
+                this.$emit('errordetected');
+                // I do not like doing this "emit" here (inside a rules function). We should be able to use the "update:error"
+                // event on the combobox and emit from a handler for that, but *that* does not work due to vuetify bug..
+                // This trick is *almost* as good.
+                return 'You must specify one or more items';
+            }else{
+                return true;
+            }
+        }],
 
         };
     },
+    
     methods: {
+        error_handler(err_state){ 
+            console.log("error_detected" + err_state);
+            if (err_state){
+                this.$emit('errordetected');
+            }
+        },
+
+
+
         get_ideal_extension_choices(){
             //we are computing a new extension_choices object based on a new *value*.
             var extension_choices = {};

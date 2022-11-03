@@ -4,13 +4,16 @@
             <v-card-title class="text-h4">
                 Programs and Plans (if applicable)
             </v-card-title>
-            <v-toolbar color = "primary lighten-2">
+            <v-toolbar color="primary lighten-2">
                 <v-toolbar-title>Commonly selected programs</v-toolbar-title>
             </v-toolbar>
-            <v-expansion-panels>
+            <v-expansion-panels multiple
+              
+              v-model="open_prog_plans" >
                 <v-expansion-panel
-                      v-for = "faculty in Object.keys(faculties)"
+                      v-for = "(faculty,index) in Object.keys(faculties)"
                      :key = "faculty"
+                     
                 >
                    <v-expansion-panel-header>
                         {{  faculties[faculty]['longhand'] + ' (' + faculty + ')' }}
@@ -21,6 +24,7 @@
                          v-model = "progs_selected_by_faculty[faculty]"
                          :list_vals = "faculties[faculty]['progs']"
                          :faculty_has_certs = "faculties[faculty]['certs']"
+                         @errordetected="error_detected(index)"
                         />
                     </v-expansion-panel-content>
                 </v-expansion-panel>
@@ -54,6 +58,7 @@ export default {
     components: { 
       SelectListStudent,
     },
+
     props: {
         value: Object, //list of stuff
                       //looks like
@@ -86,6 +91,10 @@ export default {
         heading: String
         
     },
+
+   
+
+
     data: function() {
         return {
             progs_selected_by_faculty: this.progs_selected_by_faculty_from_value(),   
@@ -93,12 +102,27 @@ export default {
                                              // "value" model, should this property exist.
                                              // However it includes all faculties,
                                              // even the ones for which no programs are selected.
-            other_plans_progs_selected: this.other_plans_progs_from_value()   
+            other_plans_progs_selected: this.other_plans_progs_from_value(),   
                                              //this is a mirror of the other_plans_progs field of the "value"
                                              // model should this property exist
+            open_prog_plans: []
         };
     },
     methods:{
+
+       error_detected(panel_num){
+          console.log("What do I do?"+panel_num);
+          if (!this.open_prog_plans.includes(panel_num)){
+            this.open_prog_plans.push(panel_num);
+          }
+       },
+
+
+        terror_detected: function(panel_num){
+            return function(){
+                console.log("YOLOFUCK"+panel_num);
+            }
+        },
         say: function(v){
             alert(v);
         },
@@ -184,4 +208,5 @@ export default {
         }
     }
 }
+    
 </script>
