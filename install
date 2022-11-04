@@ -48,10 +48,6 @@ if [[ "$devel_mode" -eq 0 ]]; then
     cp "$script_dir"/base/bin/* /usr/local/bin
     cp "$script_dir"/base/systemd-unit-files/* /etc/systemd/system
     mkdir --parents /usr/local/share/ticketweb/applications/reporting
-    cd "$script_dir"/frontend
-    tar --exclude-vcs --exclude-vcs-ignores -cvzf /usr/local/share/ticketweb/applications/reporting/frontend.tar.gz *
-    cd "$script_dir"/shared-data
-    tar cvzf /usr/local/share/ticketweb/applications/reporting/shared_data.tar.gz *
     
 
 

@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 #default values
 devel_mode=0
 # venv_id=unset
@@ -78,10 +79,8 @@ rm -rf "$venv_varlib"/*
 if [[ "$devel_mode" -eq 0 ]]; then
     frontend_src_dir="$venv_varlib"/frontend
     mkdir "$frontend_src_dir"
-    tar xzvf $usrshared/frontend.tar.gz -C "$frontend_src_dir"
     shared_data_target_dir="$venv_usrshared"/shared-data
     mkdir "$shared_data_target_dir"    
-    tar xzvf $usrshared/shared_data.tar.gz -C "$shared_data_target_dir"
 else
     app_git_repo_dir="$2"
     ln -s "$app_git_repo_dir"/frontend "$venv_varlib"
@@ -115,10 +114,20 @@ mkdir --parents "$ticketweb_venv_root"/srv/ticketweb/applications/reporting/fron
 
 
 if [[ "$devel_mode" -eq 0 ]]; then
-   cd "$frontend_src_dir"
-   npm install
-   npm install git+https://github.com/quorit/ticketweb-authsystem.git/frontend_module
-   npm install git+https://github.com/quorit/ticketweb-rt-interface.git/frontend_module
+
+  tmpdir=$(mktemp -d /tmp/ticketweb-install.XXXXXXXX)
+  cd $tmpdir
+  git clone https://github.com/quorit/ticketweb-apps-reporting.git
+  git clone https://github.com/quorit/ticketweb-authsystem.git
+  git clone https://github.com/quorit/ticketweb-rt-interface.git
+  cd "$frontend_src_dir"
+  npm install $tmpdir/ticketweb-apps-reporting/frontend
+  npm install $tmpdir/ticketweb-authsystem/frontend_module
+  npm install $tmpdir/ticketweb-rt-interface/frontend_module
+
+  cp $tmpdir/ticketweb-apps-reporting/shared-data/* "$shared_data_target_dir"
+
+
 fi
 
 if [[ "$devel_mode" -eq 1 ]]; then
