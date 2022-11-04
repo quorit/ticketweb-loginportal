@@ -122,7 +122,7 @@ if [[ "$devel_mode" -eq 0 ]]; then
   git clone https://github.com/quorit/ticketweb-rt-interface.git
   cd "$frontend_src_dir"
   cp -r $tmpdir/ticketweb-apps-reporting/frontend/* .
-  npm install $tmpdir/ticketweb-apps-reporting/frontend
+  npm install
   npm install $tmpdir/ticketweb-authsystem/frontend_module
   npm install $tmpdir/ticketweb-rt-interface/frontend_module
 
