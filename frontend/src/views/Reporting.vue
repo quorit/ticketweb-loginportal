@@ -102,7 +102,7 @@
                <p> 
                     What is the purpose of this report?
                     <br/>
-                    <span class='text-caption'>(i.e. communcation, stats for planning/resesarch, determine eligibility for a select service)</span>
+                    <span class='text-caption'>(i.e. communication, stats for planning/research, determine eligibility for a select service)</span>
                </p>
             </v-col>
          </v-row>
