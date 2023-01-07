@@ -351,6 +351,7 @@ export default {
                } else {
                   const rightNow = new Date();
                   const [year, month_str_pre, day_str_pre] = [rightNow.getFullYear(),"0" + (rightNow.getMonth() + 1), "0" + rightNow.getDate()];
+                  console.log([year, month_str_pre, day_str_pre]);
                   const month_str = month_str_pre.substr(month_str_pre.length -2);
                   const day_str = day_str_pre.substr(day_str_pre.length -2);
                   const date_str = year + "-" + month_str + "-" + day_str;
