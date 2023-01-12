@@ -5,7 +5,43 @@
     :submission-data="submission_data"
     submit_button_label="SUBMIT YOUR REQUEST"
     :init-data="init_data"
-    :form-type="route_type">
+    :form-type="route_type"
+    :designated-approver = "da_confirm || !requested_fields.includes('Campus Email')">
+
+    <div class="text-center">
+    <v-dialog
+      v-model="da_dialog"
+      width="500"
+    >
+
+
+      <v-card>
+        <v-card-title class="text-h5 grey lighten-2">
+          Notice to users of this form
+        </v-card-title>
+
+        <v-card-text>
+         Reports requiring student email addresses must be submitted by a UAR Designated Approver.
+        </v-card-text>
+
+        <v-divider></v-divider>
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="primary"
+            text
+            @click="da_dialog = false"
+          >
+            I understand
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </div>
+
+
+
          <v-row>
             
 
@@ -264,7 +300,18 @@
              </v-col>
 
          </v-row>
+         <v-row v-if="requested_fields.includes('Campus Email')">
+            <v-col cols="12">
+         <v-alert type =  "info" v-model = "da_confirm_alert" dismissible  close-text = "Close Alert">
+               Because <i>Campus Email</i> is included among your selection of requested fields, you must confirm that you are a UAR Designated Approver before submission can proceed.
+         </v-alert>
+         <v-checkbox
+         v-model="da_confirm"
+         label="I am a UAR Designated Approver">
 
+         </v-checkbox>
+           </v-col>
+            </v-row>
   </FormShell>
 
 
@@ -284,7 +331,7 @@ import TermSelect from '../components/TermSelect.vue'
 import FormShell from '../components/FormShell.vue'
 import RptFileInput from '../components/FileInput.vue'
 
-import {get_strm_bounds, get_current_term} from '../js_extra/utils.js';
+import {get_strm_bounds, get_current_term, n_busdays_hence} from '../js_extra/utils.js';
 
 
 
@@ -346,20 +393,19 @@ export default {
          ],
          dueDateRules: [
             v => {
+               const holidays = this.$store.state.init_data.holidays
                if (!v){
                   return 'Due date is required.'
                } else {
-                  const rightNow = new Date();
-                  const [year, month_str_pre, day_str_pre] = [rightNow.getFullYear(),"0" + (rightNow.getMonth() + 1), "0" + rightNow.getDate()];
-                  console.log([year, month_str_pre, day_str_pre]);
-                  const month_str = month_str_pre.substr(month_str_pre.length -2);
-                  const day_str = day_str_pre.substr(day_str_pre.length -2);
-                  const date_str = year + "-" + month_str + "-" + day_str;
-                  const today = Date.parse(date_str);
-                  const input_date = Date.parse(v);
-                  const time_diff = (input_date - today);
+                  const five_busdays_hence = n_busdays_hence(5,holidays);
+                  const input_date = new Date(v);
+                  // input_date is 12:00 AM on date v UTC time...
+                  const input_date_t = input_date.getTime()
+                  const time_diff = (input_date_t - five_busdays_hence);
+
+
                   if (time_diff < 0){
-                     return 'Due date cannot be in the past';
+                     return 'Due date must be at least five business days in the future';
                   }else{
                      return true;
                   }
@@ -399,7 +445,10 @@ export default {
          ],
          field_list: field_list,
          route_type: route_type,
-         files: []
+         files: [],
+         da_dialog: true,
+         da_confirm_alert: false,
+         da_confirm: false
       };
    },
    methods: {
@@ -441,6 +490,7 @@ export default {
          this.due_date='';
          this.requested_fields=[];
          this.files=[];
+         this.da_confirm=false;
       }
 
    },
@@ -517,8 +567,13 @@ export default {
       
    },
    watch:{ 
+      requested_fields: function(val) {
+         this.da_confirm_alert = val.includes("Campus Email") && !this.da_confirm;
+      },
+      da_confirm(val){
+         this.da_confirm_alert=!val;
+      },
 
-   
       terms_selected: {        
          handler() {
             if(this.$route.params.type=='student'){
@@ -527,6 +582,7 @@ export default {
          },
          deep: true
       },
+
 
 
       requested_before_selection: function(){

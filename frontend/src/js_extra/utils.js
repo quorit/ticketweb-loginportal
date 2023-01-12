@@ -1,3 +1,5 @@
+
+
 const base_year = "1901";
 const base_strm = "1011";
 
@@ -64,4 +66,51 @@ function strm_get_prev(strm){
 
 
 
-export {term_lookup, get_strm_bounds, strm_get_prev, get_current_term};
+
+
+function is_busday(day,holidays){
+    const daynum = day.getDay();
+
+    if (daynum==0 || daynum ==6) {
+        return false;
+    }else{
+        var holiday;
+        var holiday_date;
+        for (holiday of holidays){
+            holiday_date= new Date(holiday)
+            //holiday as date object 12:00 UTC time
+            if (day.getTime() ==holiday_date.getTime()){
+                return false;
+            }
+        }
+
+    }
+    return true;
+}
+
+
+function n_busdays_hence(n,holidays){
+    var result = new Date(new Date().toDateString());
+    //result is 12:00 AM in local time
+    const tz_offset = result.getTimezoneOffset() * 60 * 1000;
+    result.setTime(result.getTime() -tz_offset);
+    //Now result is 12:00 AM in UTC time.
+
+    var bus_days = 0;
+    while (bus_days < n ) {
+        //business_day
+
+        
+        result.setDate(result.getDate() + 1);
+        if (is_busday(result,holidays)){
+            bus_days=bus_days + 1
+        }
+
+    }
+    return result.getTime();
+
+}
+
+
+
+export {term_lookup, get_strm_bounds, strm_get_prev, get_current_term, n_busdays_hence};

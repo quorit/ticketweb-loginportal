@@ -103,7 +103,7 @@ import DateMenu from '../components/DateMenu.vue'
 import FormShell from '../components/FormShell.vue'
 import ReportChoice from '../components/ReportChoice.vue'
 import RptFileInput from '../components/FileInput.vue'
-
+import {n_busdays_hence} from '../js_extra/utils.js';
 
 
 export default {
@@ -132,19 +132,19 @@ export default {
          ],
          dueDateRules: [
             v => {
+               const holidays = this.$store.state.init_data.holidays
                if (!v){
                   return 'Due date is required.'
                } else {
-                  const rightNow = new Date();
-                  const [year, month_str_pre, day_str_pre] = [rightNow.getFullYear(),"0" + (rightNow.getMonth() + 1), "0" + rightNow.getDate()];
-                  const month_str = month_str_pre.substr(month_str_pre.length -2);
-                  const day_str = day_str_pre.substr(day_str_pre.length -2);
-                  const date_str = year + "-" + month_str + "-" + day_str;
-                  const today = Date.parse(date_str);
-                  const input_date = Date.parse(v);
-                  const time_diff = (input_date - today);
+                  const five_busdays_hence = n_busdays_hence(5,holidays);
+                  const input_date = new Date(v);
+                  // input_date is 12:00 AM on date v UTC time...
+                  const input_date_t = input_date.getTime()
+                  const time_diff = (input_date_t - five_busdays_hence);
+
+
                   if (time_diff < 0){
-                     return 'Due date cannot be in the past';
+                     return 'Due date must be at least five business days in the future';
                   }else{
                      return true;
                   }

@@ -104,6 +104,13 @@ const config_data = JSON.parse(process.env.VUE_APP_CONFIG_DATA);
 const authsystem_path = config_data.vue_app_path_roots.authsystem;
 const app_server_path = config_data.vue_app_path_roots.app_server;
 
+class NotDAError extends Error {
+    //this is for when a fetch fails and we don't even get a response
+    constructor(){
+       super("Campus Email included in request but user is not a designated approver.");
+       this.name="NotDAError";
+    }
+}
 
 export default {
    name: 'FormShell',
@@ -116,7 +123,11 @@ export default {
         heading: String,
         initData: Object,
         submit_button_label: String,
-        formType: String
+        formType: String,
+        designatedApprover: {
+          default: true,
+          type: Boolean
+        }
    },
    data: function() {
 
@@ -137,13 +148,18 @@ export default {
 
       validate_form: function (app_token){
          return (new Promise((resolve,reject)=>{
-            const validation_result = this.$refs.form.validate();
-            if (validation_result){
-               resolve(app_token)  //just passes the app token down the chain.
-                                   //Not used by this function which is not really async
+            if (!this.designatedApprover){
+               const err=new NotDAError();
+               reject(err);
             }else{
-               const err= new FormValidationError();
-               reject(err)
+               const validation_result = this.$refs.form.validate();
+               if (validation_result){
+                  resolve(app_token)  //just passes the app token down the chain.
+                                      //Not used by this function which is not really async
+               }else{
+                  const err= new FormValidationError();
+                  reject(err)
+               }
             }
          }));
       },
