@@ -24,7 +24,7 @@
        Form did not validate
    </span>
    <span v-else-if="error_obj.name=='NotDAError'">
-       You must be a UAR Designated Approver if <i>Campus Email</i> is included among the requested fields you have selected.
+       You must be a UAR Designated Approver if <i>Applicant Email</i> is included among the requested fields you have selected.
    </span>
    <span v-else>
        <h3>Uncategorized error</h3>

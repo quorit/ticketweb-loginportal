@@ -6,9 +6,9 @@
     submit_button_label="SUBMIT YOUR REQUEST"
     :init-data="init_data"
     :form-type="route_type"
-    :designated-approver = "da_confirm || !requested_fields.includes('Campus Email')">
+    :designated-approver = "da_confirm || !requested_fields.includes('Applicant Email')">
 
-    <div class="text-center">
+    <div class="text-center" v-if="$route.params.type=='admissions'">
     <v-dialog
       v-model="da_dialog"
       width="500"
@@ -300,10 +300,10 @@
              </v-col>
 
          </v-row>
-         <v-row v-if="requested_fields.includes('Campus Email')">
+         <v-row v-if="requested_fields.includes('Applicant Email')">
             <v-col cols="12">
          <v-alert type =  "info" v-model = "da_confirm_alert" dismissible  close-text = "Close Alert">
-               Because <i>Campus Email</i> is included among your selection of requested fields, you must confirm that you are a UAR Designated Approver before submission can proceed.
+               Because <i>Applicant Email</i> is included among your selection of requested fields, you must confirm that you are a UAR Designated Approver before submission can proceed.
          </v-alert>
          <v-checkbox
          v-model="da_confirm"
@@ -568,7 +568,7 @@ export default {
    },
    watch:{ 
       requested_fields: function(val) {
-         this.da_confirm_alert = val.includes("Campus Email") && !this.da_confirm;
+         this.da_confirm_alert = val.includes("Applicant Email") && !this.da_confirm;
       },
       da_confirm(val){
          this.da_confirm_alert=!val;

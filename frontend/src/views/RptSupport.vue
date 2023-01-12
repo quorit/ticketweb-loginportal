@@ -1,7 +1,7 @@
 <template>
    <FormShell
    :clear-func="clear_func"
-    heading="Data support request"
+    heading="Data and Data support request"
     :submission-data="submission_data"
     :init-data="init_data"
     submit_button_label="SUBMIT YOUR SUPPORT REQUEST"
