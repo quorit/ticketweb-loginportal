@@ -21,7 +21,7 @@
         </v-card-title>
 
         <v-card-text>
-         Reports requiring student email addresses must be submitted by a UAR Designated Approver.
+         Reports requiring applicant email addresses must be submitted by a UAR Designated Approver.
         </v-card-text>
 
         <v-divider></v-divider>
