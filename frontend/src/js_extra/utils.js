@@ -69,7 +69,7 @@ function strm_get_prev(strm){
 
 
 function is_busday(day,holidays){
-    const daynum = day.getDay();
+    const daynum = day.getUTCDay();
 
     if (daynum==0 || daynum ==6) {
         return false;
@@ -90,27 +90,42 @@ function is_busday(day,holidays){
 
 
 function n_busdays_hence(n,holidays){
-    var result = new Date(new Date().toDateString());
-    //result is 12:00 AM in local time
-    const tz_offset = result.getTimezoneOffset() * 60 * 1000;
-    result.setTime(result.getTime() -tz_offset);
-    //Now result is 12:00 AM in UTC time.
+    //This may have been a stupid choice but we are not interested in time zones.
+    //Therefore we are doing everything in the UTC time zone.
+    //THe theory being that UTC is as close to a time-zoneless time-zone as we
+    //are going to get.
+    var result = new Date(new Date().toDateString() + " 00:00:00 UTC");
+    //result should be the present date but at 12 AM UTC....
 
     var bus_days = 0;
     while (bus_days < n ) {
         //business_day
 
         
-        result.setDate(result.getDate() + 1);
+        result.setUTCDate(result.getUTCDate() + 1);
+        //The above line should advance the date by one day.
+
         if (is_busday(result,holidays)){
             bus_days=bus_days + 1
         }
 
     }
+    console.log("n_busdays_hence"+result);
     return result.getTime();
 
 }
 
+function is_n_busdays_hence(input_day_str,n,holidays){
+    const five_busdays_hence = n_busdays_hence(5,holidays);
+    const input_date = new Date(input_day_str);
+    // input_date is 12:00 AM on date, UTC time...
+    const input_date_t = input_date.getTime()
+    const time_diff = (input_date_t - five_busdays_hence);
+    return time_diff >= 0;
+}
 
 
-export {term_lookup, get_strm_bounds, strm_get_prev, get_current_term, n_busdays_hence};
+
+
+
+export {term_lookup, get_strm_bounds, strm_get_prev, get_current_term, is_n_busdays_hence};

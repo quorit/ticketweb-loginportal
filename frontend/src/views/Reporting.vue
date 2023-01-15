@@ -331,7 +331,7 @@ import TermSelect from '../components/TermSelect.vue'
 import FormShell from '../components/FormShell.vue'
 import RptFileInput from '../components/FileInput.vue'
 
-import {get_strm_bounds, get_current_term, n_busdays_hence} from '../js_extra/utils.js';
+import {get_strm_bounds, get_current_term, is_n_busdays_hence} from '../js_extra/utils.js';
 
 
 
@@ -392,26 +392,9 @@ export default {
             v => !!v || 'Report title is required.'
          ],
          dueDateRules: [
-            v => {
-               const holidays = this.$store.state.init_data.holidays
-               if (!v){
-                  return 'Due date is required.'
-               } else {
-                  const five_busdays_hence = n_busdays_hence(5,holidays);
-                  const input_date = new Date(v);
-                  // input_date is 12:00 AM on date v UTC time...
-                  const input_date_t = input_date.getTime()
-                  const time_diff = (input_date_t - five_busdays_hence);
-
-
-                  if (time_diff < 0){
-                     return 'Due date must be at least five business days in the future';
-                  }else{
-                     return true;
-                  }
-
-               }
-            }
+            v => !!v || 'Due date is required',
+            v => is_n_busdays_hence(v,5,this.$store.state.init_data.holidays) 
+                     || 'Due date must be at least five business days in the future'
          ],
          requestorPositionRules: [
          ],
