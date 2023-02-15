@@ -97,7 +97,13 @@ router.beforeEach(async (to,from,next) => {
 
 
         try{
-            await authsystem_network.get_app_token(authsystem_path,"reporting").then(app_token => store.dispatch('set_user_data',app_token));
+            console.log("Did you even get here?")
+            const json_data = await authsystem_network.get_app_token(authsystem_path,"reporting");
+            const user_data=json_data.user_data;
+            console.log("HI not yas");
+            console.log(user_data);
+            console.log(store.commit);
+            store.commit('set_user_data',user_data);
             //Note that I am re-fetching the user data every time we go to a new page (other than login or error).
             //This is because in another window the user could log out and log in as someone else.
             //and if this app were any more involved, there would be links going from one route to another
@@ -127,7 +133,8 @@ router.beforeEach(async (to,from,next) => {
             }else{
 
                 const error_params=get_error_params(e);
-
+                console.log(e);
+                console.log("FUCKAGE");
                 next( {                    
                     name: "error_page",
                     params: error_params

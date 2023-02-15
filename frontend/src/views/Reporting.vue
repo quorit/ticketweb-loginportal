@@ -369,9 +369,9 @@ export default {
 
       return {
          response_text: '',
-         requestor_name: this.$store.state.user_data.display_name,
+         requestor_name: this.$store.state.user_data.real_name,
          requestor_dept: '',
-         requestor_email: this.$store.state.user_data.mail,
+         requestor_email: this.$store.state.user_data.email,
          requestor_position: '',
          due_date: '',
          subject: '',
@@ -483,7 +483,6 @@ export default {
       },
 
       init_data: function(){
-         console.log("WHERE ARE WE?");
          return this.$store.state.init_data;
       },
      

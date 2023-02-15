@@ -117,9 +117,9 @@ export default {
    data: function() {
       
       return {
-         requestor_name: this.$store.state.user_data.display_name,
+         requestor_name: this.$store.state.user_data.real_name,
          requestor_dept: '',
-         requestor_email: this.$store.state.user_data.mail,
+         requestor_email: this.$store.state.user_data.email,
          requestor_position: '',
          due_date: '',
          requestorEmailRules: [

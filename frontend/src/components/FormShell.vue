@@ -180,10 +180,10 @@ export default {
 
             response_json = await authsystem_network.get_app_token(authsystem_path,"reporting")
                             .then(this.validate_form)
-                            .then(app_token => rt_network.submit_data(this.submissionData.json,
+                            .then(response => rt_network.submit_data(this.submissionData.json,
                                                            this.submissionData.attachments,
                                                            this.formType,
-                                                           app_token,
+                                                           response.jwt_token,
                                                            app_server_path));
          } catch(e){
             if (e instanceof authsystem_network.SessionAuthenticationError){

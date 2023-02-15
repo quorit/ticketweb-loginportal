@@ -111,6 +111,7 @@ export default {
    methods: {
 
       login: async function () {
+         console.log("is this even being called?")
 
          const validation_result = this.$refs.form.validate();
          if (!validation_result){
@@ -143,6 +144,7 @@ export default {
                   type: form_type
                };
          }
+         console.log("And then what???")
          await this.$router.push(route_obj);
       }    
       
