@@ -12,8 +12,8 @@ Type = simple
 # (I wouldn't know)
 
 # the specific user that our service will run as
-User=ticketweb_apps_reporting
-Group=ticketweb_apps_reporting
+User=ticketweb_loginportal
+Group=ticketweb_loginportal
 
 
 
@@ -21,7 +21,7 @@ Group=ticketweb_apps_reporting
 # DynamicUser=yes
 # see http://0pointer.net/blog/dynamic-users-with-systemd.html
 
-RuntimeDirectory=ticketweb/%i/applications/reporting
+RuntimeDirectory=ticketweb/%i/loginportal
 
 # This translates in practice to /run/tokenserver.
 # not sure if this needs to be set or if this would have been the default anyway
@@ -35,7 +35,7 @@ RuntimeDirectory=ticketweb/%i/applications/reporting
 
 
 
-ExecStart=/usr/local/bin/ticketweb-apps-reporting-server %f
+ExecStart=/usr/local/bin/ticketweb-loginportal-server %f
 
 
 

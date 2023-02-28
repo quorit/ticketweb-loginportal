@@ -1,0 +1,41 @@
+#!/bin/bash
+
+usage()
+{
+  echo "Usage: ticketweb-apps-loginportal-frontend <venv_root> { build | serve }"
+# when we upgrade to vite 'serve' will become 'dev'
+
+  exit 2
+}
+
+
+
+if [[ -z $2 ]]; then
+   usage
+fi
+
+
+
+
+
+ticketweb_venv_root="$1"
+mode="$2"
+
+
+cat $ticketweb_venv_root/etc/ticketweb/loginportal/frontend-config.json
+
+
+
+VUE_APP_CONFIG_DATA=$(cat $ticketweb_venv_root/etc/ticketweb/loginportal/frontend-config.json) 
+export VUE_APP_CONFIG_DATA
+
+
+
+cd "$ticketweb_venv_root"/var/lib/ticketweb/loginportal/frontend
+
+VUE_APP_VENV_ROOT="$ticketweb_venv_root"
+
+export VUE_APP_VENV_ROOT
+
+
+npm run "$mode"

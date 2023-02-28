@@ -1,0 +1,133 @@
+#!/bin/bash
+
+
+#default values
+devel_mode=0
+# venv_id=unset
+ticketweb_venv_root=unset
+
+
+usage()
+{
+  echo "Usage 1: ticketweb-loginportal-install --devel-mode <venv_root> <loginportal_git_dir>"
+  echo "Usage 2: ticketweb-loginportal-install <venv_root>"
+  exit 2
+}
+
+
+PARSED_ARGUMENTS=$(getopt --name ticketweb-loginportal-install -o d --long devel-mode -- "$@")
+
+VALID_ARGUMENTS=$?
+if [ "$VALID_ARGUMENTS" != "0" ]; then
+  usage
+fi
+
+
+eval set -- "$PARSED_ARGUMENTS"
+while :
+do
+  case "$1" in
+    --devel-mode)   devel_mode=1      ; shift   ;;
+    # -- means the end of the arguments; drop this, and break out of the while loop
+    --) shift; break ;;
+    # If invalid options were passed, then getopt should have reported an error,
+    # which we checked as VALID_ARGUMENTS when getopt was called...
+    *) echo "Unexpected option: $1 - this should not happen."
+       usage ;;
+  esac
+done
+
+
+if (( "$devel_mode" == 1 && $# != 2 || "$devel_mode" == 0 && $# != 1 )); then
+    usage
+fi
+
+ticketweb_venv_root=$1
+
+# venv_id=$(systemd-escape --path "$ticketweb_venv_root")
+
+# if [[ "$devel_mode" -eq 0 ]]; then
+#   mkdir --parents --mode=770 /var/log/ticketweb/"$venv_id"/applications/reporting 
+#   chown ticketweb_apps_reporting:ticketweb_apps_reporting /var/log/ticketweb/"$venv_id"/applications/reporting
+# fi
+
+
+script_dir=$(dirname -- "$0")
+
+
+usrshared=/usr/local/share/ticketweb/loginportal
+venv_usrshared="$ticketweb_venv_root"$usrshared
+
+
+venv_varlib="$ticketweb_venv_root"/var/lib/ticketweb/loginportal
+
+
+mkdir --parents "$venv_usrshared"
+
+
+mkdir --parents "$venv_varlib"
+
+
+rm -rf "$venv_usrshared"/*
+
+rm -rf "$venv_varlib"/*
+
+
+
+
+
+if [[ "$devel_mode" -eq 0 ]]; then
+    frontend_src_dir="$venv_varlib"/frontend
+    mkdir "$frontend_src_dir"
+    shared_data_target_dir="$venv_usrshared"/server-data
+    mkdir "$shared_data_target_dir"    
+else
+    app_git_repo_dir="$2"
+    ln -s "$app_git_repo_dir"/frontend "$venv_varlib"
+    ln -s "$app_git_repo_dir"/server-data "$venv_usrshared"
+fi   
+
+
+mkdir --parents "$ticketweb_venv_root"/etc/ticketweb/loginportal
+
+
+source $ticketweb_venv_root/bin/activate
+
+if [[ "$devel_mode" -eq 0 ]]; then
+    pip install --force-reinstall "git+https://github.com/quorit/ticketweb-loginportal.git#subdirectory=server"
+   
+
+else
+    cd "$app_git_repo_dir"/server
+    echo $(pwd)
+    pip install --editable .
+fi
+
+
+
+mkdir --parents "$ticketweb_venv_root"/srv/ticketweb/loginportal
+
+
+if [[ "$devel_mode" -eq 0 ]]; then
+
+  tmpdir=$(mktemp -d /tmp/ticketweb-install.XXXXXXXX)
+  cd $tmpdir
+  git clone https://github.com/quorit/ticketweb-loginportal.git
+  cd "$frontend_src_dir"
+  cp -r $tmpdir/ticketweb-loginportal/frontend/* .
+  npm install
+
+
+  cp $tmpdir/ticketweb-loginportal/server-data/* "$shared_data_target_dir"
+
+
+fi
+
+
+pem_file="$ticketweb_venv_root"/etc/ticketweb/loginportal/secret.pem
+openssl genrsa -out "$pem_file" 2048
+
+
+if [[ "$devel_mode" -eq 0 ]]; then
+   chown ticketweb_loginportal:ticketweb_loginportal "$pem_file"
+fi

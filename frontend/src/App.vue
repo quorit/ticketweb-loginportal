@@ -27,14 +27,9 @@
 
       <v-spacer></v-spacer> -->
       <span class="mr-2">
-            OUR/UAR Service Ticket Request Forms {{ mode_text }}
+            Student Information Systems Login Portal {{ mode_text }}
       </span>
       <v-spacer/>
-      <v-btn v-if="$route.name != 'login' && $route.name != 'error_page'"
-                  class="ma-2"
-                  @click ="logout()">
-                  LOGOUT
-               </v-btn>
     </v-app-bar>
 
     <v-main> 
@@ -45,13 +40,9 @@
 
 <script>
 
-const authsystem_network = require ("authsystem_network");
-import {get_error_params} from './js_extra/web_project_error.js'
 
 
 const config_data = JSON.parse(process.env.VUE_APP_CONFIG_DATA);
-
-const authsystem_path = config_data.vue_app_path_roots.authsystem;
 
 export default {
   name: 'App',
@@ -71,30 +62,10 @@ export default {
     };
   },
   methods: {
-    logout: async function(){
-      try {
-         await authsystem_network.delete_session(authsystem_path,"reporting");      
-      } catch (e) {
-          this.$router.push( {                    
-                    name: "error_page",
-                    params: get_error_params(e)
-                });
-          return;
-      }
-      
-      this.$router.go() //reloads page which should cause cause a re-route to the login page because the session cookie go mauled
-    }
+
 
   },
   mounted: async function(){
-    try { 
-      await this.$store.dispatch('set_init_data');
-    } catch(e) {
-      this.$router.push({
-          name: "error_page",
-          params: get_error_params(e)
-      });            
-    }
   }
 };
 </script>

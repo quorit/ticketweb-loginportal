@@ -6,7 +6,7 @@ devel_mode=0
 
 usage()
 {
-  echo "Usage 1: install --devel-mode <rt-interface-git-repo-path> <authsystem-git-repo-path>"
+  echo "Usage 1: install --devel-mode"
   echo "Usage 2: install"
   exit 2
 }
@@ -36,7 +36,7 @@ do
   esac
 done
 
-if (( $devel_mode == 1 && $# != 2 || $devel_mode == 0 && $# != 0 )); then
+if (( $devel_mode == 1 && $# != 0 || $devel_mode == 0 && $# != 0 )); then
     usage
 fi
 
@@ -44,10 +44,10 @@ script_dir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && 
 echo #script_dir
 
 if [[ "$devel_mode" -eq 0 ]]; then
-    useradd --system --no-create-home ticketweb_apps_reporting
+    useradd --system --no-create-home ticketweb_loginportal
     cp "$script_dir"/base/bin/* /usr/local/bin
     cp "$script_dir"/base/systemd-unit-files/* /etc/systemd/system
-    mkdir --parents /usr/local/share/ticketweb/applications/reporting
+    mkdir --parents /usr/local/share/ticketweb/loginportal
     
 
 
@@ -55,14 +55,7 @@ else
     # we are in devel mode
     mkdir --parents "$HOME"/.local/bin
     ln --symbolic --force "$script_dir"/base/bin/* "$HOME"/.local/bin
-    rt_interface_root=$1
-    authsystem_root=$2
-    cd "$rt_interface_root"/frontend_module
-    sudo npm link
-    cd "$authsystem_root"/frontend_module
-    sudo npm link
     cd "$script_dir"/frontend
     npm install
-    npm link authsystem_network rt_network
 fi
 
