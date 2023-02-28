@@ -47,7 +47,6 @@ if [[ "$devel_mode" -eq 0 ]]; then
     useradd --system --no-create-home ticketweb_loginportal
     cp "$script_dir"/base/bin/* /usr/local/bin
     cp "$script_dir"/base/systemd-unit-files/* /etc/systemd/system
-    mkdir --parents /usr/local/share/ticketweb/loginportal
     
 
 
