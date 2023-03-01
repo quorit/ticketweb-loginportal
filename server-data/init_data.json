@@ -1,6 +1,0 @@
-{
-    "reporting_admissions": "http://localhost:8080/app/frontend/forms/admissions",
-    "reporting_student": "http://localhost:8080/app/frontend/forms/student",
-    "reporting_rptsupport": "http://localhost:8080/app/frontend/forms/rptsupport",
-    "ithelp_onboarding": "http://localhost:8081/app/frontend/forms/onboarding"
-}

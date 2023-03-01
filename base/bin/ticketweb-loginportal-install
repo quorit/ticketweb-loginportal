@@ -55,20 +55,14 @@ ticketweb_venv_root=$1
 script_dir=$(dirname -- "$0")
 
 
-usrshared=/usr/local/share/ticketweb/loginportal
-venv_usrshared="$ticketweb_venv_root"$usrshared
 
 
 venv_varlib="$ticketweb_venv_root"/var/lib/ticketweb/loginportal
 
 
-mkdir --parents "$venv_usrshared"
-
 
 mkdir --parents "$venv_varlib"
 
-
-rm -rf "$venv_usrshared"/*
 
 rm -rf "$venv_varlib"/*
 
@@ -78,13 +72,10 @@ rm -rf "$venv_varlib"/*
 
 if [[ "$devel_mode" -eq 0 ]]; then
     frontend_src_dir="$venv_varlib"/frontend
-    mkdir "$frontend_src_dir"
-    shared_data_target_dir="$venv_usrshared"/server-data
-    mkdir "$shared_data_target_dir"    
+    mkdir "$frontend_src_dir" 
 else
     app_git_repo_dir="$2"
     ln -s "$app_git_repo_dir"/frontend "$venv_varlib"
-    ln -s "$app_git_repo_dir"/server-data "$venv_usrshared"
 fi   
 
 
@@ -116,10 +107,6 @@ if [[ "$devel_mode" -eq 0 ]]; then
   cd "$frontend_src_dir"
   cp -r $tmpdir/ticketweb-loginportal/frontend/* .
   npm install
-
-
-  cp $tmpdir/ticketweb-loginportal/server-data/* "$shared_data_target_dir"
-
 
 fi
 
