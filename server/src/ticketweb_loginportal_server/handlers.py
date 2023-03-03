@@ -78,16 +78,16 @@ def _get_user_data(ldap_handle,userid,attributes):
     except ldap.LDAPError as e:
         raise falcon.HTTPInternalServerError(description="Ldap failure: " + str(e))
 
-    result_attributes = ldap_search_result[0][1]
-    result_dict = {}
-    for attribute in attributes:
-        result_dict[attribute]=result_attributes[attribute][0].decode(encoding='utf-8', errors='strict')
     user_dn = ldap_search_result[0][0]
     if not user_dn:
         raise falcon.HTTPBadRequest(
             title="User not found in LDAP Search",
             description="User not found in LDAP Search"
         )
+    result_attributes = ldap_search_result[0][1]
+    result_dict = {}
+    for attribute in attributes:
+        result_dict[attribute]=result_attributes[attribute][0].decode(encoding='utf-8', errors='strict')
     return (user_dn,result_dict)
 
 
