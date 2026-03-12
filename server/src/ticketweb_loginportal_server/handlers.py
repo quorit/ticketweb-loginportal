@@ -126,24 +126,31 @@ class LoginHandler ():
         url = ldap_data["url"]
 
         try:
+            print ("hello hello")
+            # WARNING: This makes the connection insecure!
+            ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
+            #please try to fix this asap
             ldap_handle  = ldap.initialize(url)
 
             service_account_dn = ldap_data["dn"]
             search_base=ldap_data["search_base"]
-
+            print (service_account_pw)
             ldap_handle.simple_bind_s(service_account_dn,service_account_pw)
-
+            print ("hello hello 2")
             ldap_handle.set_option(ldap.OPT_REFERRALS, 0)
         except ldap.LDAPError as e:
             raise falcon.HTTPInternalServerError(description="Ldap failure: " + str(e))
         (user_dn,user_data) = _get_user_data(ldap_handle,userid,["displayName","mail"])
         try:
+             
+             print ("hello hello")
              ldap_handle.simple_bind_s(user_dn,password)
              # The success of this tests the user's password
         except ldap.INVALID_CREDENTIALS:
             raise falcon.HTTPUnauthorized()
         except ldap.LDAPError as e:
-            raise falcon.HTTPInternalServerError(description="Ldap failure: " + str(e))
+            raise falcon.HTTPInternalServerError(description="Ldap failurze: " + str(e))
+        
         priv_key = rsa_key_data["private_key"]
         token = create_token(priv_key,userid,user_data["displayName"],user_data["mail"],15)
         response_json = {
