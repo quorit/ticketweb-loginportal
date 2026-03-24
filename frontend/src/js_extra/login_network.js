@@ -35,12 +35,8 @@ class ConnectionError extends NetworkError {
 function test_ok(response) {
     return new Promise ((resolve,reject) => {
        if (response.ok){
-         console.log("About to resolve response");
           resolve (response);
        }else{
-         console.log("bye son");
-         console.log(response);
-         console.log(response.status);
          var str = "Server returned " + response.status + " : " + response.statusText;
          if (response.status){
 
@@ -54,19 +50,18 @@ function test_ok(response) {
 }
 
 
-function extended_fetch(opts,server_path,app_key){
-   const url = window.location.origin + server_path + "login/" + app_key;
+function extended_fetch(opts,server_path){
+   const url = window.location.origin + server_path + "login";
 
    return fetch(url,opts).then(response => response,err=> new ConnectionError(err.message));
 }
 
 
 
-function login(user_id, password,server_path,app_key){
+function login(user_id, server_path){
    
    const body = JSON.stringify({
-      user_id: user_id,
-      password: password
+      user_id: user_id
    });
    return extended_fetch(
       {   
@@ -74,10 +69,9 @@ function login(user_id, password,server_path,app_key){
          mode: "cors",
          body: body
       },
-      server_path,
-      app_key)
+      server_path)
       .then(response => test_ok(response))
-      .then(response => response.json())
+      .then(response => response.text())
 }
 
 

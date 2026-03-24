@@ -20,11 +20,13 @@ def create_token(secret,net_id,real_name,email,duration):
      exp_time_english = time.ctime(exp_time)
      print (exp_time_english)
      jwt_payload = {
-         'sub': net_id,
+         'upn': net_id + '@' + "queensu.ca",
          'name': real_name,
          'email': email,
          'exp': exp_time,
-         'jti': jti
+         'uti': jti,
+         'aud': "ticketweb_auth_server",
+         'iss': "ticketweb_portal"
      }
      headers = {
         'alg': "HS256",
@@ -71,8 +73,9 @@ def _get_json_string(obj,item_key,max_len):
     return item
 
 
-def _get_user_data(ldap_handle,userid,attributes):
+def _get_user_data(ldap_handle,userid):
     search_base=ldap_data["search_base"]
+    attributes = ["displayName","proxyAddresses"]
     try:        
         ldap_search_result = ldap_handle.search_s(search_base,ldap.SCOPE_SUBTREE,"(sAMAccountName={0})".format(userid),attributes)
     except ldap.LDAPError as e:
@@ -85,18 +88,47 @@ def _get_user_data(ldap_handle,userid,attributes):
             description="User not found in LDAP Search"
         )
     result_attributes = ldap_search_result[0][1]
+    print (result_attributes)
     result_dict = {}
-    for attribute in attributes:
-        result_dict[attribute]=result_attributes[attribute][0].decode(encoding='utf-8', errors='strict')
+    result_dict["display_name"] = result_attributes["displayName"][0].decode(encoding='utf-8', errors='strict')
+    proxy_addresses = result_attributes["proxyAddresses"]
+    result_dict["primary_email"] = get_primary_email(proxy_addresses)
+
+    # for attribute in attributes:
+    #    result_dict[attribute]=result_attributes[attribute][0].decode(encoding='utf-8', errors='strict')
     return (user_dn,result_dict)
 
+def get_primary_email(proxy_addresses):
+    # 1. Handle ldap3 Attribute objects explicitly
+    if hasattr(proxy_addresses, 'values'):
+        proxy_addresses = proxy_addresses.values
+        
+    if not proxy_addresses:
+        return None
 
+    for address in proxy_addresses:
+        # 2. Handle bytes vs strings
+        if isinstance(address, bytes):
+            address = address.decode('utf-8')
+        
+        # 3. Use case-insensitive check
+        # Primary is 'SMTP:', secondary is 'smtp:'
+        if address.startswith('SMTP:'):
+            return address[5:] # More efficient than replace()
+
+    return None
+
+# Example Usage:
+# ldap_proxy_list = ['smtp:alias@company.com', 'SMTP:primary@company.com', 'smtp:hr@company.com']
+# primary = get_primary_email(ldap_proxy_list)
+
+# print(f"Primary Email: {primary}")
 
 class LoginHandler ():
 
 
 
-    def on_post(self,req,resp,url_key):
+    def on_post(self,req,resp):
 
         content_len = req.content_length
         if content_len==0:
@@ -122,11 +154,10 @@ class LoginHandler ():
                  description= "'user_id' JSON item does not have correct format."
              )
         userid = _canonicalise_userid(user_id)
-        password = _get_json_string(req_content,"password",255)
+        # password = _get_json_string(req_content,"password",255)
         url = ldap_data["url"]
 
         try:
-            print ("hello hello")
             # WARNING: This makes the connection insecure!
             ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
             #please try to fix this asap
@@ -140,26 +171,26 @@ class LoginHandler ():
             ldap_handle.set_option(ldap.OPT_REFERRALS, 0)
         except ldap.LDAPError as e:
             raise falcon.HTTPInternalServerError(description="Ldap failure: " + str(e))
-        (user_dn,user_data) = _get_user_data(ldap_handle,userid,["displayName","mail"])
-        try:
-             
-             print ("hello hello")
-             ldap_handle.simple_bind_s(user_dn,password)
-             # The success of this tests the user's password
-        except ldap.INVALID_CREDENTIALS:
-            raise falcon.HTTPUnauthorized()
-        except ldap.LDAPError as e:
-            raise falcon.HTTPInternalServerError(description="Ldap failurze: " + str(e))
+        (user_dn,user_data) = _get_user_data(ldap_handle,userid)
+        print ("USER DATA FOLLOWS")
+        print (user_data)
+        print (user_data["primary_email"])
+        print ("Natalie whatever")
+        # try:
+        #     
+        #     print ("hello hello")
+        #     ldap_handle.simple_bind_s(user_dn,password)
+        #     # The success of this tests the user's password
+        #except ldap.INVALID_CREDENTIALS:
+        #    raise falcon.HTTPUnauthorized()
+        #except ldap.LDAPError as e:
+        #    raise falcon.HTTPInternalServerError(description="Ldap failurze: " + str(e))
         
         priv_key = rsa_key_data["private_key"]
-        token = create_token(priv_key,userid,user_data["displayName"],user_data["mail"],15)
-        response_json = {
-            "jwt": token,
-            "forward_url": config_data["url_map"][url_key]
-        }
-        print(response_json)
-        resp.text = json.dumps(response_json)
-        resp.content_type = falcon.MEDIA_JSON
+        token = create_token(priv_key,userid,user_data["display_name"],
+                              user_data["primary_email"],15)
+        resp.text = token
+        resp.content_type = falcon.MEDIA_TEXT
         resp.status = falcon.HTTP_CREATED
    
 

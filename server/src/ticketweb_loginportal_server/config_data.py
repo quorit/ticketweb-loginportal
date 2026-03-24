@@ -1,5 +1,5 @@
 import sys
-import json
+import pyjson5 as json
 import os
 from cryptography.hazmat.primitives import serialization
 
@@ -12,7 +12,7 @@ else:
 
 
 def _get_config_data_all():
-    ldap_file = os.path.join(_etc_path,"ticketweb/loginportal/server-config.json")
+    ldap_file = os.path.join(_etc_path,"ticketweb/loginportal/server-config.json5")
 
     f = open(ldap_file,"r")
     ldap_data = json.load(f)

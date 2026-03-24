@@ -8,7 +8,7 @@ Vue.use(VueRouter)
 
 const routes = [
     {
-        path: '/:app_key?',
+        path: '/',
         component: LoginForm,
         name: "login"
     },

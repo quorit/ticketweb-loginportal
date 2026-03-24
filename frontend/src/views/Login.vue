@@ -22,6 +22,7 @@
          ref="form"
          v-model="form_valid"
          lazy-evaluation
+         @submit.prevent="login()"
       >
      <v-row>
          <v-col cols="12">
@@ -31,19 +32,11 @@
                   v-bind:counter="50"
                   v-bind:rules="[v => !!v || 'Net ID is required']"
                   label="Queen's Net ID"
-                  />
-                   <v-text-field
-                  :append-icon="pass_show ? 'mdi-eye' : 'mdi-eye-off'"
-                  maxlength="50"
-                  :type="pass_show ? 'text' : 'password'"
-                  v-model="password"
-                  v-bind:counter="50"
-                  v-bind:rules="[v => !!v || 'Password is required']"
-                  label="Password"
-                  @click:append="pass_show = !pass_show"
-                  @keyup.enter="login()"
+
+               
                   required
-               />
+                  />
+                 
         </v-col>
     </v-row>
     
@@ -111,8 +104,6 @@ export default {
          processing_request: false,
          login_fail: false,
          net_id: "",
-         password: "",
-         pass_show: false,
          login_error: null,
          img_url: process.env.BASE_URL + "stargate.svg"
       };
@@ -130,10 +121,9 @@ export default {
          }
          this.processing_request=true;
          this.login_fail=false;
-         const app_key = this.$route.params.app_key
-         var response_body;
+         var id_token;
          try {
-            response_body=await login(this.net_id,this.password,server_path,app_key);
+            id_token=await login(this.net_id,server_path);
          } catch (e) {
             this.login_error = e;
             this.processing_request=false;
@@ -141,10 +131,15 @@ export default {
             return;
          }
          this.processing_request=false;
-         console.log(response_body)
-         const forward_url=response_body.forward_url
-         const access_token=response_body.jwt
-         const new_url=forward_url+"?access-token="+access_token;
+         console.log(id_token)
+         const queryString = window.location.search;
+         const urlParams = new URLSearchParams(queryString);
+         const redirect_uri = urlParams.get('redirect_uri');
+         const destination_params = new URLSearchParams({
+            id_token: id_token
+         });
+         const new_url=`${redirect_uri}?${destination_params.toString()}`;
+         console.log(new_url);
          window.location.replace(new_url);
       }    
       
