@@ -1,8 +1,8 @@
 // vue.config.cjs
-const j5 = require('json5');
+
 const path = require("path");
 
-const config_data = j5.parse(process.env.VUE_APP_CONFIG_DATA);
+const config_data = JSON.parse(process.env.VUE_APP_CONFIG_DATA);
 
 
 
